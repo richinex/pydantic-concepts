@@ -1,0 +1,72 @@
+The Factory pattern is a creational design pattern that provides an interface for creating objects without specifying their exact classes. It's useful when you want to decouple object creation from the code that uses the object.
+Let's explore this pattern with examples in both Go and Python.
+Go example:
+goCopy// Product interface
+type Animal interface {
+    Speak() string
+}
+
+// Concrete products
+type Dog struct{}
+func (d *Dog) Speak() string {
+    return "Woof!"
+}
+
+type Cat struct{}
+func (c *Cat) Speak() string {
+    return "Meow!"
+}
+
+// Factory
+func AnimalFactory(animalType string) Animal {
+    switch animalType {
+    case "dog":
+        return &Dog{}
+    case "cat":
+        return &Cat{}
+    default:
+        return nil
+    }
+}
+
+// Usage
+func main() {
+    dog := AnimalFactory("dog")
+    fmt.Println(dog.Speak())  // Output: Woof!
+
+    cat := AnimalFactory("cat")
+    fmt.Println(cat.Speak())  // Output: Meow!
+}
+Python example:
+pythonCopyfrom abc import ABC, abstractmethod
+
+# Product interface
+class Animal(ABC):
+    @abstractmethod
+    def speak(self):
+        pass
+
+# Concrete products
+class Dog(Animal):
+    def speak(self):
+        return "Woof!"
+
+class Cat(Animal):
+    def speak(self):
+        return "Meow!"
+
+# Factory
+def animal_factory(animal_type):
+    if animal_type == "dog":
+        return Dog()
+    elif animal_type == "cat":
+        return Cat()
+    else:
+        raise ValueError("Unknown animal type")
+
+# Usage
+dog = animal_factory("dog")
+print(dog.speak())  # Output: Woof!
+
+cat = animal_factory("cat")
+print(cat.speak())  # Output: Meow!

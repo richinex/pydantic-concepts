@@ -1,0 +1,917 @@
+1. Introduction to Bash
+
+Bash (Bourne Again SHell) is a powerful command-line interpreter and scripting language for Unix-like operating systems. Mastery of Bash allows you to interact efficiently with the system, automate tasks, and handle complex operations with ease.
+2. Bash Scripting Basics
+2.1. Writing Your First Script
+
+Example:
+
+Create a file called hello_world.sh:
+
+bash
+
+#!/bin/bash
+
+echo "Hello, World!"
+
+Explanation:
+
+    #!/bin/bash: Shebang line specifying the script should be run with Bash.
+    echo "Hello, World!": Prints "Hello, World!" to the terminal.
+
+Make the script executable:
+
+bash
+
+chmod +x hello_world.sh
+
+Run the script:
+
+bash
+
+./hello_world.sh
+
+Output:
+
+plaintext
+
+Hello, World!
+
+2.2. Variables
+
+Example:
+
+bash
+
+#!/bin/bash
+
+name="Alice"
+echo "Hello, $name!"
+
+Output:
+
+plaintext
+
+Hello, Alice!
+
+Explanation:
+
+    Variables are assigned without spaces: name="Alice"
+    Access variables using $name
+
+2.3. Command-Line Arguments
+
+Example:
+
+bash
+
+#!/bin/bash
+
+echo "Script name: $0"
+echo "First argument: $1"
+echo "All arguments: $@"
+
+Run the script:
+
+bash
+
+./script.sh arg1 arg2 arg3
+
+Output:
+
+plaintext
+
+Script name: ./script.sh
+First argument: arg1
+All arguments: arg1 arg2 arg3
+
+3. Control Structures
+3.1. If Statements
+
+Example:
+
+bash
+
+#!/bin/bash
+
+if [ "$1" -gt 10 ]; then
+  echo "Argument is greater than 10."
+else
+  echo "Argument is less than or equal to 10."
+fi
+
+Explanation:
+
+    [ "$1" -gt 10 ]: Tests if the first argument is greater than 10.
+    then, else, fi: Structure of an if statement.
+
+Run the script:
+
+bash
+
+./script.sh 15
+
+Output:
+
+plaintext
+
+Argument is greater than 10.
+
+3.2. Case Statements
+
+Example:
+
+bash
+
+#!/bin/bash
+
+case "$1" in
+  start)
+    echo "Starting service..."
+    ;;
+  stop)
+    echo "Stopping service..."
+    ;;
+  restart)
+    echo "Restarting service..."
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    ;;
+esac
+
+Run the script:
+
+bash
+
+./script.sh start
+
+Output:
+
+plaintext
+
+Starting service...
+
+3.3. Loops
+3.3.1. For Loops
+
+Example:
+
+bash
+
+#!/bin/bash
+
+for i in {1..5}; do
+  echo "Iteration $i"
+done
+
+Output:
+
+plaintext
+
+Iteration 1
+Iteration 2
+Iteration 3
+Iteration 4
+Iteration 5
+
+3.3.2. While Loops
+
+Example:
+
+bash
+
+#!/bin/bash
+
+count=1
+while [ $count -le 5 ]; do
+  echo "Count is $count"
+  ((count++))
+done
+
+Output:
+
+plaintext
+
+Count is 1
+Count is 2
+Count is 3
+Count is 4
+Count is 5
+
+4. Functions
+4.1. Defining and Calling Functions
+
+Example:
+
+bash
+
+#!/bin/bash
+
+greet() {
+  echo "Hello, $1!"
+}
+
+greet "Bob"
+
+Output:
+
+plaintext
+
+Hello, Bob!
+
+Explanation:
+
+    greet() { ... }: Defines a function named greet.
+    $1: Accesses the first argument passed to the function.
+
+4.2. Returning Values
+
+Example:
+
+bash
+
+#!/bin/bash
+
+add() {
+  local sum=$(( $1 + $2 ))
+  echo $sum
+}
+
+result=$(add 5 10)
+echo "Result is $result"
+
+Output:
+
+plaintext
+
+Result is 15
+
+Explanation:
+
+    local: Declares a local variable within the function.
+    $(...): Command substitution to capture the output of the function.
+
+5. Arrays
+5.1. Indexed Arrays
+
+Example:
+
+bash
+
+#!/bin/bash
+
+fruits=("Apple" "Banana" "Cherry")
+echo "First fruit: ${fruits[0]}"
+echo "All fruits: ${fruits[@]}"
+
+Output:
+
+plaintext
+
+First fruit: Apple
+All fruits: Apple Banana Cherry
+
+5.2. Associative Arrays
+
+Example:
+
+bash
+
+#!/bin/bash
+
+declare -A user
+user[name]="Alice"
+user[age]=30
+
+echo "Name: ${user[name]}"
+echo "Age: ${user[age]}"
+
+Output:
+
+plaintext
+
+Name: Alice
+Age: 30
+
+Explanation:
+
+    declare -A: Declares an associative array.
+
+6. Advanced Parameter Expansion
+6.1. Default Values
+
+Example:
+
+bash
+
+#!/bin/bash
+
+echo "Name: ${name:-Unknown}"
+
+Output when name is unset:
+
+plaintext
+
+Name: Unknown
+
+6.2. String Manipulation
+
+Example:
+
+bash
+
+#!/bin/bash
+
+text="Hello, World!"
+echo "Length: ${#text}"
+echo "Substring: ${text:7:5}"
+
+Output:
+
+plaintext
+
+Length: 13
+Substring: World
+
+Explanation:
+
+    ${#text}: Gets the length of the string.
+    ${text:7:5}: Extracts a substring starting at index 7 of length 5.
+
+6.3. Pattern Replacement
+
+Example:
+
+bash
+
+#!/bin/bash
+
+filename="report.txt"
+echo "Without extension: ${filename%.txt}"
+echo "Change extension: ${filename%.txt}.md"
+
+Output:
+
+plaintext
+
+Without extension: report
+Change extension: report.md
+
+Explanation:
+
+    ${filename%.txt}: Removes .txt from the end of the filename.
+    ${filename%.txt}.md: Changes the extension to .md.
+
+7. Redirection and Pipelines
+7.1. Input and Output Redirection
+
+Example:
+
+bash
+
+#!/bin/bash
+
+echo "This is a log message." >> logfile.txt
+
+Explanation:
+
+    >>: Appends output to logfile.txt.
+
+Check logfile.txt contents:
+
+plaintext
+
+This is a log message.
+
+7.2. Here Documents
+
+Example:
+
+bash
+
+#!/bin/bash
+
+cat <<EOF > output.txt
+Line 1
+Line 2
+EOF
+
+Explanation:
+
+    <<EOF: Starts a here document that continues until EOF is encountered.
+    > output.txt: Redirects the output to output.txt.
+
+Contents of output.txt:
+
+plaintext
+
+Line 1
+Line 2
+
+7.3. Pipes
+
+Example:
+
+bash
+
+#!/bin/bash
+
+ls -l | grep "^d"
+
+Explanation:
+
+    ls -l: Lists files in long format.
+    |: Pipes the output to the next command.
+    grep "^d": Filters lines starting with d (directories).
+
+8. Process Substitution
+
+Example:
+
+bash
+
+#!/bin/bash
+
+diff <(ls dir1) <(ls dir2)
+
+Explanation:
+
+    <(...): Process substitution, treats the output of ls dir1 and ls dir2 as files for diff.
+    Useful for comparing outputs of commands.
+
+9. Job Control
+9.1. Background and Foreground Processes
+
+Run a command in the background:
+
+bash
+
+sleep 30 &
+
+Output:
+
+plaintext
+
+[1] 12345
+
+Explanation:
+
+    &: Runs sleep 30 in the background.
+    [1]: Job number.
+    12345: Process ID (PID).
+
+Bring the job to the foreground:
+
+bash
+
+fg %1
+
+Explanation:
+
+    fg %1: Brings job number 1 to the foreground.
+
+9.2. Job Management
+
+List jobs:
+
+bash
+
+jobs
+
+Output:
+
+plaintext
+
+[1]+  Running                 sleep 30 &
+
+Stop a job:
+
+bash
+
+kill %1
+
+10. Signal Handling and Traps
+10.1. Trapping Signals
+
+Example:
+
+bash
+
+#!/bin/bash
+
+trap "echo 'Ctrl+C pressed! Exiting...'; exit" SIGINT
+
+while true; do
+  echo "Running..."
+  sleep 1
+done
+
+Explanation:
+
+    trap ... SIGINT: Catches the SIGINT signal (Ctrl+C).
+    Executes the specified commands when the signal is received.
+
+11. Subshells and Command Substitution
+11.1. Subshells
+
+Example:
+
+bash
+
+#!/bin/bash
+
+(
+  cd /tmp
+  echo "Current directory inside subshell: $(pwd)"
+)
+
+echo "Current directory outside subshell: $(pwd)"
+
+Output:
+
+plaintext
+
+Current directory inside subshell: /tmp
+Current directory outside subshell: /original/directory
+
+Explanation:
+
+    Parentheses () create a subshell.
+    Changes inside the subshell do not affect the parent shell.
+
+11.2. Command Substitution
+
+Example:
+
+bash
+
+#!/bin/bash
+
+current_date=$(date +"%Y-%m-%d")
+echo "Today's date is $current_date"
+
+Output:
+
+plaintext
+
+Today's date is 2023-10-01
+
+Explanation:
+
+    $(...): Executes the command and captures its output.
+
+12. Advanced Scripting Techniques
+12.1. Using getopts for Argument Parsing
+
+Example:
+
+bash
+
+#!/bin/bash
+
+while getopts ":u:p:" opt; do
+  case $opt in
+    u) user=$OPTARG ;;
+    p) pass=$OPTARG ;;
+    \?) echo "Invalid option: -$OPTARG" ;;
+  esac
+done
+
+echo "User: $user"
+echo "Password: $pass"
+
+Run the script:
+
+bash
+
+./script.sh -u alice -p secret
+
+Output:
+
+plaintext
+
+User: alice
+Password: secret
+
+Explanation:
+
+    getopts: Parses options and arguments.
+    :u:p:: Specifies that options u and p require arguments.
+
+12.2. Regular Expressions in Bash
+
+Example:
+
+bash
+
+#!/bin/bash
+
+read -p "Enter email: " email
+if [[ $email =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$ ]]; then
+  echo "Valid email."
+else
+  echo "Invalid email."
+fi
+
+Run the script:
+
+plaintext
+
+Enter email: user@example.com
+Valid email.
+
+Explanation:
+
+    [[ ... =~ ... ]]: Tests if a string matches a regex pattern.
+
+12.3. Debugging Scripts
+
+Example:
+
+bash
+
+#!/bin/bash -x
+
+for i in {1..3}; do
+  echo "Number $i"
+done
+
+Explanation:
+
+    -x: Enables debugging mode, prints each command before execution.
+
+Output:
+
+plaintext
+
++ for i in '{1..3}'
++ echo 'Number {1..3}'
+Number {1..3}
+
+Note: In this case, {1..3} is not expanded because of the quotes.
+13. Advanced I/O Handling
+13.1. Reading Files Line by Line
+
+Example:
+
+Create a file data.txt:
+
+plaintext
+
+Line 1
+Line 2
+Line 3
+
+Script:
+
+bash
+
+#!/bin/bash
+
+while IFS= read -r line; do
+  echo "Read: $line"
+done < data.txt
+
+Output:
+
+plaintext
+
+Read: Line 1
+Read: Line 2
+Read: Line 3
+
+Explanation:
+
+    IFS=: Prevents leading/trailing whitespace trimming.
+    read -r: Reads raw input without interpreting backslashes.
+
+13.2. File Descriptors
+
+Example:
+
+bash
+
+#!/bin/bash
+
+exec 3>output.txt
+echo "Writing to file descriptor 3" >&3
+exec 3>&-
+
+Explanation:
+
+    exec 3>output.txt: Opens output.txt for writing on file descriptor 3.
+    >&3: Redirects output to file descriptor 3.
+    exec 3>&-: Closes file descriptor 3.
+
+Contents of output.txt:
+
+plaintext
+
+Writing to file descriptor 3
+
+14. Bash Options and Configuration
+14.1. set Built-in
+
+    set -e: Exit immediately if a command exits with a non-zero status.
+    set -u: Treat unset variables as an error.
+    set -o pipefail: The return value of a pipeline is the status of the last command to exit with a non-zero status.
+
+Example:
+
+bash
+
+#!/bin/bash
+set -euo pipefail
+
+echo "Script starts."
+undefined_variable
+echo "This will not be printed."
+
+Output:
+
+plaintext
+
+Script starts.
+./script.sh: line 4: undefined_variable: unbound variable
+
+Explanation:
+
+    The script exits when it encounters the unset variable.
+
+15. Best Practices and Tips
+15.1. Writing Portable Scripts
+
+    Use #!/usr/bin/env bash for portability.
+    Avoid non-standard Bash features if targeting different shells.
+
+15.2. Quoting Variables
+
+    Always quote variables to prevent word splitting and globbing.
+
+Example:
+
+bash
+
+rm -rf "$dir_name"
+
+15.3. Checking Command Success
+
+    Use && and || for conditional execution.
+
+Example:
+
+bash
+
+mkdir /tmp/mydir && echo "Directory created."
+
+15.4. Using shellcheck
+
+    A static analysis tool for shell scripts.
+
+Install:
+
+bash
+
+sudo apt-get install shellcheck
+
+Use:
+
+bash
+
+shellcheck script.sh
+
+15.5. Managing Errors
+
+    Use traps and error handling functions.
+
+Example:
+
+bash
+
+#!/bin/bash
+set -e
+
+error_handler() {
+  echo "Error occurred in script at line: $1"
+}
+
+trap 'error_handler $LINENO' ERR
+
+# Commands that might fail
+
+16. Advanced Examples
+16.1. Parallel Command Execution
+
+Example:
+
+bash
+
+#!/bin/bash
+
+commands=("sleep 2" "ls -l" "echo 'Hello World'")
+for cmd in "${commands[@]}"; do
+  eval "$cmd" &
+done
+wait
+echo "All commands completed."
+
+Explanation:
+
+    Runs multiple commands in parallel.
+    wait: Waits for all background jobs to finish.
+
+16.2. Creating a Menu Interface
+
+Example:
+
+bash
+
+#!/bin/bash
+
+PS3="Please select an option: "
+options=("Option 1" "Option 2" "Quit")
+select opt in "${options[@]}"; do
+  case $opt in
+    "Option 1")
+      echo "You chose Option 1"
+      ;;
+    "Option 2")
+      echo "You chose Option 2"
+      ;;
+    "Quit")
+      break
+      ;;
+    *)
+      echo "Invalid option"
+      ;;
+  esac
+done
+
+Explanation:
+
+    select: Provides a simple menu interface.
+    PS3: Prompt string for the select command.
+
+16.3. Parsing JSON with jq
+
+Example:
+
+Given a JSON file data.json:
+
+json
+
+{
+  "users": [
+    {"name": "Alice", "age": 30},
+    {"name": "Bob", "age": 25}
+  ]
+}
+
+Script:
+
+bash
+
+#!/bin/bash
+
+names=$(jq -r '.users[].name' data.json)
+for name in $names; do
+  echo "User: $name"
+done
+
+Output:
+
+plaintext
+
+User: Alice
+User: Bob
+
+Explanation:
+
+    jq: Command-line JSON processor.
+    -r: Outputs raw strings without quotes.
+
+16.4. Network Operations
+
+Example:
+
+bash
+
+#!/bin/bash
+
+response=$(curl -s -o /dev/null -w "%{http_code}" http://example.com)
+if [ "$response" -eq 200 ]; then
+  echo "Website is reachable."
+else
+  echo "Website is not reachable. Status code: $response"
+fi
+
+Explanation:
+
+    curl -s: Silent mode, no progress bar.
+    -o /dev/null: Discards the body of the response.
+    -w "%{http_code}": Writes the HTTP status code to standard output.
+
+17. Conclusion
+
+By exploring these advanced Bash commands and scripting techniques with detailed examples, you've taken a significant step toward mastering Bash. This knowledge will enable you to automate complex tasks, write efficient scripts, and troubleshoot issues effectively, positioning you among the top 1% of Bash users.

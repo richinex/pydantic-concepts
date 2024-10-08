@@ -1,0 +1,778 @@
+In the context of the jq query you've shared, the [] symbol has a specific meaning when used in jq to manipulate arrays.
+Explanation of [] in jq:
+
+    [] in jq is used to iterate over the elements of an array. When you place [] after an array in a jq expression, it "unpacks" or "extracts" each item from the array individually.
+
+Breaking down the jq query:
+
+bash
+
+jq 'select(.[].favoriteFruit=="strawberry") | .[].friends[0].name' example.json
+
+    select(.[].favoriteFruit=="strawberry"):
+        .[].favoriteFruit uses [] to iterate over all the objects in the outermost array (each object in the JSON document). It looks for entries where the favoriteFruit field is equal to "strawberry".
+        select() filters and keeps only those objects where this condition is true.
+
+    [].friends[0].name:
+        After filtering with select(), [] is used again to iterate over each object in the remaining list.
+        For each object, .friends[0].name accesses the first element of the friends array (friends[0]) and retrieves the name field from it.
+
+What does the whole query do?
+
+    It first selects all entries (objects) in the JSON array where "favoriteFruit" is "strawberry".
+    Then, it accesses the friends array of each selected entry and prints the name of the first friend (friends[0].name).
+
+Example JSON Fragment:
+
+json
+
+[
+  {
+    "_id": "612297a64a057a3fa3a56fcf",
+    "latitude": -25.750679,
+    "longitude": 130.044327,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Tara Holland"
+      },
+      {
+        "id": 1,
+        "name": "Giles Glover"
+      },
+      {
+        "id": 2,
+        "name": "Pennington Shannon"
+      }
+    ],
+    "favoriteFruit": "strawberry"
+  },
+  {
+    "_id": "612297a64a057a3fa3a56fde",
+    "latitude": -25.750679,
+    "longitude": 130.044327,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Christy Mullins"
+      }
+    ],
+    "favoriteFruit": "strawberry"
+  }
+]
+
+In this case, the query would output:
+
+arduino
+
+"Tara Holland"
+"Christy Mullins"
+
+Because:
+
+    The first entry has "Tara Holland" as the first friend.
+    The second entry has "Christy Mullins" as the first friend.
+
+Summary:
+
+    [] in jq is used to iterate over arrays. It extracts each item in the array one by one.
+    
+Example 1: Extract All Titles from a List of Books
+
+JSON Data (books.json):
+
+json
+
+[
+  {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
+  {"title": "1984", "author": "George Orwell"},
+  {"title": "To Kill a Mockingbird", "author": "Harper Lee"}
+]
+
+jq Command:
+
+bash
+
+jq '.[].title' books.json
+
+Output:
+
+arduino
+
+"The Great Gatsby"
+"1984"
+"To Kill a Mockingbird"
+
+Explanation:
+
+    .: Represents the entire input JSON, which is an array of book objects.
+    []: The array iterator; it iterates over each element in the array.
+    .[]: For each element (book object) in the array.
+    .title: Accesses the title field of the current book object.
+    .[].title: Combines the above to extract the title from each book in the array.
+
+Summary: The command iterates over each book in the array and outputs the value of the title field.
+Example 2: Select Users Older Than 30
+
+JSON Data (data.json):
+
+json
+
+{
+  "users": [
+    {"name": "Alice", "age": 28},
+    {"name": "Bob", "age": 35},
+    {"name": "Charlie", "age": 32}
+  ]
+}
+
+jq Command:
+
+bash
+
+jq '.users[] | select(.age > 30)' data.json
+
+Output:
+
+json
+
+{
+  "name": "Bob",
+  "age": 35
+}
+{
+  "name": "Charlie",
+  "age": 32
+}
+
+Explanation:
+
+    .users[]: Accesses the users array and iterates over each user object.
+    |: Pipes the result to the next operation.
+    select(.age > 30): Filters the user objects, selecting only those where the age field is greater than 30.
+
+Summary: The command filters and outputs user objects from the users array where the user's age is over 30.
+Example 3: Increase All Prices by 10%
+
+JSON Data (products.json):
+
+json
+
+[
+  {"product": "Widget", "price": 25.00},
+  {"product": "Gadget", "price": 35.50},
+  {"product": "Thingamajig", "price": 45.75}
+]
+
+jq Command:
+
+bash
+
+jq 'map(.price *= 1.10)' products.json
+
+Output:
+
+json
+
+[
+  {"product": "Widget", "price": 27.5},
+  {"product": "Gadget", "price": 39.05},
+  {"product": "Thingamajig", "price": 50.325}
+]
+
+Explanation:
+
+    map(...): Applies a transformation to each element in the array.
+    .price *= 1.10: Multiplies the price field of each product by 1.10 (increasing it by 10%).
+    map(.price *= 1.10): For each product in the array, update the price field by increasing it by 10%.
+
+Summary: The command increases the price of each product by 10% and returns the updated array.
+Example 4: Get Names in Uppercase
+
+JSON Data (names.json):
+
+json
+
+[
+  {"name": "alice"},
+  {"name": "bob"},
+  {"name": "charlie"}
+]
+
+jq Command:
+
+bash
+
+jq '.[].name | ascii_upcase' names.json
+
+Output:
+
+arduino
+
+"ALICE"
+"BOB"
+"CHARLIE"
+
+Explanation:
+
+    .[].name: Iterates over each object in the array and accesses the name field.
+    |: Pipes the name values to the next function.
+    ascii_upcase: Converts the input string to uppercase ASCII characters.
+
+Summary: The command outputs the name field of each object in uppercase letters.
+Example 5: Concatenate First and Last Names
+
+JSON Data (people.json):
+
+json
+
+[
+  {"firstName": "John", "lastName": "Doe"},
+  {"firstName": "Jane", "lastName": "Smith"},
+  {"firstName": "Emily", "lastName": "Jones"}
+]
+
+jq Command:
+
+bash
+
+jq 'map(.fullName = .firstName + " " + .lastName)' people.json
+
+Output:
+
+json
+
+[
+  {"firstName": "John", "lastName": "Doe", "fullName": "John Doe"},
+  {"firstName": "Jane", "lastName": "Smith", "fullName": "Jane Smith"},
+  {"firstName": "Emily", "lastName": "Jones", "fullName": "Emily Jones"}
+]
+
+Explanation:
+
+    map(...): Applies a transformation to each element in the array.
+    .fullName = .firstName + " " + .lastName: Creates a new field fullName by concatenating firstName, a space, and lastName.
+    map(.fullName = .firstName + " " + .lastName): Adds the fullName field to each object in the array.
+
+Summary: The command adds a fullName field to each person by combining their firstName and lastName.
+Example 6: Assign Status Based on Score
+
+JSON Data (scores.json):
+
+json
+
+[
+  {"name": "Student A", "score": 45},
+  {"name": "Student B", "score": 75},
+  {"name": "Student C", "score": 60}
+]
+
+jq Command:
+
+bash
+
+jq 'map(.status = if .score > 50 then "Pass" else "Fail" end)' scores.json
+
+Output:
+
+json
+
+[
+  {"name": "Student A", "score": 45, "status": "Fail"},
+  {"name": "Student B", "score": 75, "status": "Pass"},
+  {"name": "Student C", "score": 60, "status": "Pass"}
+]
+
+Explanation:
+
+    map(...): Applies a transformation to each element in the array.
+    if ... then ... else ... end: Conditional expression in jq.
+    .score > 50: Condition to check if the score is greater than 50.
+    .status = if .score > 50 then "Pass" else "Fail" end: Sets the status field based on the score.
+
+Summary: The command adds a status field to each student, assigning "Pass" if their score is above 50, otherwise "Fail".
+Example 7: Count Occurrences of Each Fruit
+
+JSON Data (fruits.json):
+
+json
+
+[
+  {"fruit": "apple"},
+  {"fruit": "banana"},
+  {"fruit": "apple"},
+  {"fruit": "orange"},
+  {"fruit": "banana"},
+  {"fruit": "apple"}
+]
+
+jq Command:
+
+bash
+
+jq 'group_by(.fruit) | map({fruit: .[0].fruit, count: length})' fruits.json
+
+Output:
+
+json
+
+[
+  {"fruit": "apple", "count": 3},
+  {"fruit": "banana", "count": 2},
+  {"fruit": "orange", "count": 1}
+]
+
+Explanation:
+
+    group_by(.fruit): Groups the array elements into arrays based on the value of fruit.
+    |: Pipes the grouped data to the next operation.
+    map(...): Transforms each group in the array.
+    .{}: Constructs a new object.
+    .[0].fruit: Accesses the fruit field from the first element of each group.
+    length: Returns the number of elements in the group.
+    {fruit: .[0].fruit, count: length}: Creates an object with the fruit name and its count.
+
+Summary: The command counts how many times each fruit appears and outputs an array of objects with the fruit names and their counts.
+Example 8: Flatten Nested Arrays
+
+JSON Data (nested.json):
+
+json
+
+[
+  {"items": [1, [2, [3, 4]], 5]},
+  {"items": [[6, 7], 8, [9]]}
+]
+
+jq Command:
+
+bash
+
+jq 'map(.items |= flatten)' nested.json
+
+Output:
+
+json
+
+[
+  {"items": [1, 2, 3, 4, 5]},
+  {"items": [6, 7, 8, 9]}
+]
+
+Explanation:
+
+    map(...): Applies a transformation to each element in the array.
+    .items |= flatten: Updates the items field by applying the flatten function.
+    |=: The update assignment operator, which updates the value of .items with the result of flatten.
+    flatten: Recursively flattens nested arrays into a single-level array.
+
+Summary: The command flattens the nested items arrays within each object, resulting in a single-level array of items.
+Example 9: Find All Occurrences of "id"
+
+JSON Data (complex.json):
+
+json
+
+{
+  "users": [
+    {"id": 1, "name": "Alice"},
+    {"id": 2, "name": "Bob"}
+  ],
+  "meta": {
+    "pagination": {"total": 2},
+    "request": {"id": "req_123"}
+  }
+}
+
+jq Command:
+
+bash
+
+jq '.. | objects | select(has("id")) | .id' complex.json
+
+Output:
+
+arduino
+
+1
+2
+"req_123"
+
+Explanation:
+
+    ..: Recursive descent operator; traverses all levels of the JSON hierarchy.
+    |: Pipes the output to the next operation.
+    objects: Filters only JSON objects.
+    select(has("id")): Selects objects that have an id field.
+    .id: Extracts the id field from the selected objects.
+
+Summary: The command searches the entire JSON structure for objects containing an id field and outputs their id values.
+Example 10: Delete a Field from All Objects
+
+JSON Data (data.json):
+
+json
+
+[
+  {"name": "Item A", "value": 10, "unnecessaryField": "remove me"},
+  {"name": "Item B", "value": 20, "unnecessaryField": "remove me too"}
+]
+
+jq Command:
+
+bash
+
+jq 'map(del(.unnecessaryField))' data.json
+
+Output:
+
+json
+
+[
+  {"name": "Item A", "value": 10},
+  {"name": "Item B", "value": 20}
+]
+
+Explanation:
+
+    map(...): Applies a transformation to each element in the array.
+    del(.unnecessaryField): Deletes the unnecessaryField from each object.
+
+Summary: The command removes the unnecessaryField from each object in the array.
+Example 11: Merge Two JSON Files
+
+JSON Data (file1.json):
+
+json
+
+{"a": 1, "b": 2}
+
+JSON Data (file2.json):
+
+json
+
+{"b": 3, "c": 4}
+
+jq Command:
+
+bash
+
+jq -s '.[0] + .[1]' file1.json file2.json
+
+Output:
+
+json
+
+{
+  "a": 1,
+  "b": 3,
+  "c": 4
+}
+
+Explanation:
+
+    -s: Slurp mode; reads all input files into an array.
+    .[0]: The first element in the array (contents of file1.json).
+    .[1]: The second element in the array (contents of file2.json).
+    +: Merges the two objects, with values from the second object overwriting those from the first if keys are the same.
+
+Summary: The command merges the contents of two JSON files into a single object.
+Example 12: Filter Based on Multiple Conditions
+
+JSON Data (users.json):
+
+json
+
+[
+  {"name": "Alice", "age": 25, "verified": true},
+  {"name": "Bob", "age": 32, "verified": false},
+  {"name": "Charlie", "age": 35, "verified": true}
+]
+
+jq Command:
+
+bash
+
+jq '.[] | select(.age > 30 and .verified == true)' users.json
+
+Output:
+
+json
+
+{
+  "name": "Charlie",
+  "age": 35,
+  "verified": true
+}
+
+Explanation:
+
+    .[]: Iterates over each user in the array.
+    select(...): Filters elements based on the given conditions.
+    .age > 30 and .verified == true: Checks if age is greater than 30 and verified is true.
+
+Summary: The command selects and outputs users who are older than 30 and have verified status as true.
+Example 13: Create a CSV from JSON Data
+
+JSON Data (users.json):
+
+json
+
+[
+  {"id": 1, "name": "Alice", "email": "alice@example.com"},
+  {"id": 2, "name": "Bob", "email": "bob@example.com"},
+  {"id": 3, "name": "Charlie", "email": "charlie@example.com"}
+]
+
+jq Command:
+
+bash
+
+jq -r '.[] | [.id, .name, .email] | @csv' users.json
+
+Output:
+
+perl
+
+1,"Alice","alice@example.com"
+2,"Bob","bob@example.com"
+3,"Charlie","charlie@example.com"
+
+Explanation:
+
+    -r: Outputs raw strings (without JSON quotes).
+    .[]: Iterates over each user in the array.
+    [.id, .name, .email]: Creates an array with selected fields.
+    @csv: Formats the array as a CSV line.
+
+Summary: The command converts the JSON array of users into CSV format, outputting selected fields.
+Example 14: Sort Objects by a Field
+
+JSON Data (products.json):
+
+json
+
+[
+  {"product": "Widget", "price": 25.00},
+  {"product": "Gadget", "price": 35.50},
+  {"product": "Thingamajig", "price": 45.75}
+]
+
+jq Command:
+
+bash
+
+jq 'sort_by(.price)' products.json
+
+Output:
+
+json
+
+[
+  {"product": "Widget", "price": 25.0},
+  {"product": "Gadget", "price": 35.5},
+  {"product": "Thingamajig", "price": 45.75}
+]
+
+Explanation:
+
+    sort_by(.price): Sorts the array elements based on the value of the price field in ascending order.
+
+Summary: The command sorts the products array by their price in ascending order.
+Example 15: Calculate the Sum of a Field
+
+JSON Data (transactions.json):
+
+json
+
+[
+  {"id": 1, "amount": 100.00},
+  {"id": 2, "amount": 150.50},
+  {"id": 3, "amount": 200.25}
+]
+
+jq Command:
+
+bash
+
+jq '[.[].amount] | add' transactions.json
+
+Output:
+
+450.75
+
+Explanation:
+
+    .[].amount: Iterates over each transaction and extracts the amount.
+    [ ... ]: Creates an array of the extracted amounts.
+    add: Sums up all the numbers in the array.
+
+Summary: The command calculates and outputs the total sum of the amount fields from all transactions.
+Example 16: Use Variables to Avoid Repetition
+
+JSON Data (prices.json):
+
+json
+
+[
+  {"price": 10.00},
+  {"price": 20.00},
+  {"price": 30.00}
+]
+
+jq Command:
+
+bash
+
+jq --argjson rate 1.1 'map(.price * $rate)' prices.json
+
+Output:
+
+json
+
+[
+  11.0,
+  22.0,
+  33.0
+]
+
+Explanation:
+
+    --argjson rate 1.1: Defines a variable $rate with the JSON value 1.1.
+    map(.price * $rate): Multiplies each price by $rate.
+    $rate: References the variable defined earlier.
+
+Summary: The command multiplies each price by 1.1 using a variable, outputting the new prices.
+Example 17: Handling Null and Missing Values
+
+JSON Data (data.json):
+
+json
+
+[
+  {"value": 10},
+  {"value": null},
+  {},
+  {"value": 30}
+]
+
+jq Command:
+
+bash
+
+jq 'map(.value // "N/A")' data.json
+
+Output:
+
+json
+
+[
+  10,
+  "N/A",
+  "N/A",
+  30
+]
+
+Explanation:
+
+    map(...): Applies a transformation to each element in the array.
+    .value: Attempts to access the value field.
+    //: The alternative operator; if the left side is null or missing, it returns the right side.
+    .value // "N/A": Returns value if it exists and is not null; otherwise, returns "N/A".
+
+Summary: The command replaces null or missing value fields with "N/A".
+Example 18: Extract Keys from an Object
+
+JSON Data (object.json):
+
+json
+
+{
+  "name": "Alice",
+  "age": 30,
+  "city": "Wonderland"
+}
+
+jq Command:
+
+bash
+
+jq 'keys' object.json
+
+Output:
+
+json
+
+[
+  "age",
+  "city",
+  "name"
+]
+
+Explanation:
+
+    keys: Returns an array of the keys in the input object.
+
+Summary: The command extracts and outputs the keys of the JSON object.
+Example 19: Square Numbers in an Array
+
+JSON Data (numbers.json):
+
+json
+
+[1, 2, 3, 4, 5]
+
+jq Command:
+
+bash
+
+jq 'map(. * .)' numbers.json
+
+Output:
+
+json
+
+[1, 4, 9, 16, 25]
+
+Explanation:
+
+    map(. * .): For each number in the array, multiplies it by itself (squaring it).
+
+Summary: The command outputs a new array where each number is the square of the original number.
+Example 20: Conditional Assignment Within a Map
+
+JSON Data (tasks.json):
+
+json
+
+[
+  {"task": "Task A", "status": "active"},
+  {"task": "Task B", "status": "inactive"},
+  {"task": "Task C", "status": "active"}
+]
+
+jq Command:
+
+bash
+
+jq 'map(if .status == "active" then .priority = "high" else . end)' tasks.json
+
+Output:
+
+json
+
+[
+  {"task": "Task A", "status": "active", "priority": "high"},
+  {"task": "Task B", "status": "inactive"},
+  {"task": "Task C", "status": "active", "priority": "high"}
+]
+
+Explanation:
+
+    map(...): Applies a transformation to each element in the array.
+    if ... then ... else ... end: Conditional expression.
+    .status == "active": Checks if the status field is "active".
+    then .priority = "high": If true, sets the priority field to "high".
+    else .: If false, leaves the object unchanged.
+
+Summary: The command adds a priority field with the value "high" to tasks where status is "active".

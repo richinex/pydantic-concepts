@@ -1,0 +1,933 @@
+1. Introduction to Kubernetes
+
+Kubernetes is an open-source container orchestration platform that automates deployment, scaling, and management of containerized applications. Mastery of Kubernetes involves understanding its architecture, components, and how to interact with it using manifests and kubectl.
+2. Kubernetes Architecture Overview
+
+    Master Node Components:
+        API Server (kube-apiserver): Central management entity that exposes the Kubernetes API.
+        Scheduler (kube-scheduler): Assigns workloads to nodes based on resource availability.
+        Controller Manager (kube-controller-manager): Runs controllers to manage the state of the cluster.
+        etcd: Key-value store for cluster data.
+
+    Worker Node Components:
+        Kubelet: Agent that runs on each node, responsible for pod operations.
+        Container Runtime: Runs containers (e.g., Docker, containerd).
+        Kube-proxy: Network proxy that maintains network rules on nodes.
+
+3. Understanding Kubernetes Manifests
+
+Kubernetes manifests are YAML or JSON files that define resources. We'll focus on YAML, as it's more human-readable.
+3.1. Basic Structure of a Manifest
+
+Every manifest file has the following top-level fields:
+
+    apiVersion: Defines the Kubernetes API version (e.g., v1, apps/v1).
+    kind: Specifies the type of resource (e.g., Pod, Deployment, Service).
+    metadata: Contains data to uniquely identify the object, like name, namespace, labels.
+    spec: Defines the desired state of the resource.
+
+Example: Basic Pod Manifest
+
+yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+    - name: my-container
+      image: nginx:latest
+
+3.2. Detailed Breakdown of Manifest Keys and Values
+3.2.1. apiVersion
+
+Specifies the API version for the resource.
+
+    Common API Groups:
+        v1: Core resources like Pod, Service.
+        apps/v1: Deployment, DaemonSet, StatefulSet.
+        batch/v1: Job, CronJob.
+        autoscaling/v1: HorizontalPodAutoscaler.
+
+Example:
+
+yaml
+
+apiVersion: apps/v1
+
+3.2.2. kind
+
+Defines the type of Kubernetes resource.
+
+    Examples:
+        Pod
+        Deployment
+        Service
+        ConfigMap
+        Secret
+
+3.2.3. metadata
+
+Provides metadata about the resource.
+
+    Keys:
+        name: Unique name within a namespace.
+        namespace: Namespace of the resource (defaults to default if omitted).
+        labels: Key-value pairs for identification.
+        annotations: Key-value pairs for non-identifying information.
+
+Example:
+
+yaml
+
+metadata:
+  name: my-deployment
+  namespace: production
+  labels:
+    app: web
+    tier: frontend
+  annotations:
+    description: "This is my deployment"
+
+3.2.4. spec
+
+Defines the desired state of the resource.
+
+For Different Kinds, spec Varies:
+
+    Pod Spec:
+
+    yaml
+
+spec:
+  containers:
+    - name: my-container
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+      env:
+        - name: ENV_VAR
+          value: "value"
+      resources:
+        limits:
+          memory: "256Mi"
+          cpu: "500m"
+        requests:
+          memory: "128Mi"
+          cpu: "250m"
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+  volumes:
+    - name: config-volume
+      configMap:
+        name: my-config
+
+Deployment Spec:
+
+yaml
+
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: web
+      template:
+        metadata:
+          labels:
+            app: web
+        spec:
+          containers:
+            - name: web-container
+              image: nginx:latest
+
+Explanation:
+
+    replicas: Number of desired pod replicas.
+    selector: Defines how Deployment finds which Pods to manage.
+    template: Contains the Pod template, similar to a standalone Pod spec.
+
+3.3. Common Resource Manifests Explained
+3.3.1. Pod
+
+A Pod is the smallest deployable unit in Kubernetes.
+
+Example:
+
+yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-pod
+spec:
+  containers:
+    - name: app-container
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+
+Key Fields:
+
+    containers: List of containers within the Pod.
+        name: Name of the container.
+        image: Docker image to use.
+        ports: Ports to expose.
+
+3.3.2. Deployment
+
+Deployments manage stateless applications.
+
+Example:
+
+yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web-container
+          image: nginx:1.19
+          ports:
+            - containerPort: 80
+
+Key Fields:
+
+    replicas: Number of Pod replicas.
+    selector: Identifies the Pods managed by the Deployment.
+    template: Pod template for creating Pods.
+
+3.3.3. Service
+
+Services expose applications running on a set of Pods.
+
+Example:
+
+yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: ClusterIP
+  selector:
+    app: web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+Key Fields:
+
+    type: Type of Service (ClusterIP, NodePort, LoadBalancer, ExternalName).
+    selector: Selects Pods to route traffic to.
+    ports:
+        port: Port exposed by the Service.
+        targetPort: Port on the Pod to forward traffic to.
+
+3.3.4. ConfigMap
+
+Stores configuration data as key-value pairs.
+
+Example:
+
+yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+
+Key Fields:
+
+    data: Contains configuration keys and values.
+
+3.3.5. Secret
+
+Stores sensitive data, such as passwords.
+
+Example:
+
+yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+type: Opaque
+data:
+  username: YWRtaW4=    # Base64 encoded 'admin'
+  password: cGFzc3dvcmQ=  # Base64 encoded 'password'
+
+Key Fields:
+
+    type: Secret type (Opaque is the default).
+    data: Base64 encoded key-value pairs.
+
+3.4. Advanced Manifest Features
+3.4.1. Resource Limits and Requests
+
+Define CPU and memory limits for containers.
+
+Example:
+
+yaml
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "250m"
+  limits:
+    memory: "128Mi"
+    cpu: "500m"
+
+    requests: Guaranteed resources.
+    limits: Maximum allowed resources.
+
+3.4.2. Liveness and Readiness Probes
+
+Monitor container health.
+
+Example:
+
+yaml
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+readinessProbe:
+  tcpSocket:
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+    livenessProbe: Determines if the container should be restarted.
+    readinessProbe: Determines if the container is ready to receive traffic.
+
+3.4.3. Volume Mounts and Volumes
+
+Attach storage to Pods.
+
+Example:
+
+yaml
+
+spec:
+  containers:
+    - name: app-container
+      image: myapp:latest
+      volumeMounts:
+        - name: app-storage
+          mountPath: /usr/share/app
+  volumes:
+    - name: app-storage
+      persistentVolumeClaim:
+        claimName: app-pvc
+
+    volumeMounts: Mounts volumes into containers.
+    volumes: Specifies the volumes to use.
+
+3.4.4. Affinity and Anti-Affinity
+
+Control Pod placement.
+
+Example:
+
+yaml
+
+affinity:
+  podAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app
+              operator: In
+              values:
+                - frontend
+        topologyKey: "kubernetes.io/hostname"
+
+    podAffinity: Schedules Pods to nodes where specified Pods are running.
+    podAntiAffinity: Avoids scheduling Pods on nodes where specified Pods are running.
+    topologyKey: Defines the node label to consider.
+
+3.4.5. Tolerations and Node Selectors
+
+Schedule Pods onto specific nodes.
+
+Example: Tolerations
+
+yaml
+
+tolerations:
+  - key: "key1"
+    operator: "Equal"
+    value: "value1"
+    effect: "NoSchedule"
+
+    tolerations: Allows Pods to be scheduled onto nodes with matching taints.
+
+Example: Node Selector
+
+yaml
+
+nodeSelector:
+  disktype: ssd
+
+    nodeSelector: Schedules Pods onto nodes with matching labels.
+
+4. Mastering kubectl Commands
+
+kubectl is the command-line tool for interacting with Kubernetes clusters.
+4.1. Basic Command Structure
+
+bash
+
+kubectl [command] [TYPE] [NAME] [flags]
+
+    command: Action to perform (e.g., get, apply, delete).
+    TYPE: Resource type (e.g., pods, deployments).
+    NAME: Name of the resource.
+    flags: Additional options.
+
+4.2. Resource Management Commands
+4.2.1. Get Resources
+
+List resources.
+
+bash
+
+kubectl get pods
+kubectl get deployments
+kubectl get services
+
+With Wide Output:
+
+bash
+
+kubectl get pods -o wide
+
+Filtering with Labels:
+
+bash
+
+kubectl get pods -l app=web
+
+4.2.2. Describe Resources
+
+Get detailed information.
+
+bash
+
+kubectl describe pod my-pod
+kubectl describe service my-service
+
+4.2.3. Create Resources
+
+Create resources from manifest files.
+
+bash
+
+kubectl create -f pod.yaml
+
+4.2.4. Apply Changes
+
+Apply changes from manifest files.
+
+bash
+
+kubectl apply -f deployment.yaml
+
+    apply: Creates or updates resources declaratively.
+
+4.2.5. Delete Resources
+
+Delete resources.
+
+bash
+
+kubectl delete pod my-pod
+kubectl delete -f service.yaml
+
+4.2.6. Scale Deployments
+
+Change the number of replicas.
+
+bash
+
+kubectl scale deployment web-deployment --replicas=10
+
+4.3. Interacting with Pods
+4.3.1. Access Pod Logs
+
+View container logs.
+
+bash
+
+kubectl logs my-pod
+kubectl logs my-pod -c my-container
+
+    -c: Specifies the container in a multi-container Pod.
+
+4.3.2. Execute Commands in Pods
+
+Run commands inside a container.
+
+bash
+
+kubectl exec my-pod -- ls /app
+kubectl exec -it my-pod -- /bin/bash
+
+    -it: Interactive terminal session.
+
+4.3.3. Port Forwarding
+
+Forward local port to a Pod.
+
+bash
+
+kubectl port-forward my-pod 8080:80
+
+    Access the Pod's service on localhost:8080.
+
+4.4. Working with ConfigMaps and Secrets
+4.4.1. Create ConfigMaps
+
+From literal values:
+
+bash
+
+kubectl create configmap app-config --from-literal=APP_ENV=production
+
+From files:
+
+bash
+
+kubectl create configmap app-config --from-file=config.properties
+
+4.4.2. View ConfigMaps
+
+bash
+
+kubectl get configmaps
+kubectl describe configmap app-config
+
+4.4.3. Create Secrets
+
+From literal values:
+
+bash
+
+kubectl create secret generic db-secret --from-literal=username=admin --from-literal=password='P@ssw0rd'
+
+From files:
+
+bash
+
+kubectl create secret generic db-secret --from-file=ssh-privatekey=~/.ssh/id_rsa
+
+4.4.4. View Secrets
+
+bash
+
+kubectl get secrets
+kubectl describe secret db-secret
+
+Note: Secret data is base64 encoded.
+4.5. Namespace Management
+4.5.1. List Namespaces
+
+bash
+
+kubectl get namespaces
+
+4.5.2. Create a Namespace
+
+bash
+
+kubectl create namespace development
+
+4.5.3. Use a Namespace
+
+Specify namespace in commands:
+
+bash
+
+kubectl get pods -n development
+
+Set default namespace for kubectl:
+
+bash
+
+kubectl config set-context --current --namespace=development
+
+4.6. Resource Editing and Patching
+4.6.1. Edit Resources
+
+Opens the resource manifest in an editor.
+
+bash
+
+kubectl edit deployment web-deployment
+
+4.6.2. Patch Resources
+
+Apply partial updates.
+
+JSON Patch:
+
+bash
+
+kubectl patch deployment web-deployment -p '{"spec": {"replicas": 5}}'
+
+Strategic Merge Patch:
+
+bash
+
+kubectl patch deployment web-deployment --patch-file=patch.yaml
+
+Example patch.yaml:
+
+yaml
+
+spec:
+  template:
+    spec:
+      containers:
+        - name: web-container
+          image: nginx:1.20
+
+4.7. Rollouts and Rollbacks
+4.7.1. Check Rollout Status
+
+bash
+
+kubectl rollout status deployment/web-deployment
+
+4.7.2. History of Rollouts
+
+bash
+
+kubectl rollout history deployment/web-deployment
+
+4.7.3. Rollback to Previous Revision
+
+bash
+
+kubectl rollout undo deployment/web-deployment
+
+4.7.4. Rollback to Specific Revision
+
+bash
+
+kubectl rollout undo deployment/web-deployment --to-revision=2
+
+4.8. Labeling and Annotating Resources
+4.8.1. Add Labels
+
+bash
+
+kubectl label pod my-pod env=production
+
+4.8.2. Remove Labels
+
+bash
+
+kubectl label pod my-pod env-
+
+4.8.3. Add Annotations
+
+bash
+
+kubectl annotate deployment web-deployment description="Web app deployment"
+
+4.9. Taints and Tolerations
+4.9.1. Add Taint to Node
+
+bash
+
+kubectl taint nodes node1 key=value:NoSchedule
+
+4.9.2. Remove Taint from Node
+
+bash
+
+kubectl taint nodes node1 key-
+
+4.10. Using Imperative Commands
+4.10.1. Run Pod
+
+bash
+
+kubectl run nginx-pod --image=nginx --restart=Never
+
+4.10.2. Expose Deployment as Service
+
+bash
+
+kubectl expose deployment web-deployment --port=80 --target-port=8080 --type=ClusterIP
+
+4.11. Resource Management with kubectl apply
+
+Use apply for declarative management.
+
+Apply a Directory of Manifests:
+
+bash
+
+kubectl apply -f k8s-manifests/
+
+Use kustomization.yaml:
+
+bash
+
+kubectl apply -k ./overlays/production
+
+5. Advanced Kubernetes Concepts
+5.1. StatefulSets
+
+Manages stateful applications.
+
+Example:
+
+yaml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-statefulset
+spec:
+  serviceName: "db-service"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+        - name: db-container
+          image: postgres:13
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: db-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+
+    volumeClaimTemplates: Creates PersistentVolumeClaims for each Pod.
+
+5.2. DaemonSets
+
+Ensures a copy of a Pod runs on all (or some) nodes.
+
+Example:
+
+yaml
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: logging-agent
+spec:
+  selector:
+    matchLabels:
+      app: logging
+  template:
+    metadata:
+      labels:
+        app: logging
+    spec:
+      containers:
+        - name: fluentd
+          image: fluentd:latest
+
+5.3. Jobs and CronJobs
+5.3.1. Job
+
+Runs a Pod to completion.
+
+Example:
+
+yaml
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-processing-job
+spec:
+  template:
+    spec:
+      containers:
+        - name: processor
+          image: data-processor:latest
+      restartPolicy: OnFailure
+
+5.3.2. CronJob
+
+Schedules Jobs periodically.
+
+Example:
+
+yaml
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nightly-backup
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: backup-script:latest
+          restartPolicy: OnFailure
+
+5.4. Ingress Resources
+
+Expose HTTP and HTTPS routes.
+
+Example:
+
+yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+spec:
+  rules:
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web-service
+                port:
+                  number: 80
+
+    Ingress Controller required (e.g., Nginx Ingress Controller).
+
+6. Best Practices and Tips
+6.1. Use Labels and Selectors Effectively
+
+    Organize resources with meaningful labels.
+    Use labels for selection, grouping, and management.
+
+Example Labels:
+
+yaml
+
+labels:
+  app: web
+  tier: frontend
+  environment: production
+
+6.2. Separate Configurations
+
+    Use ConfigMaps and Secrets for configuration data.
+    Avoid hardcoding sensitive data in manifests.
+
+6.3. Resource Quotas and Limits
+
+    Set resource requests and limits to optimize cluster utilization.
+    Implement ResourceQuotas at the namespace level.
+
+6.4. Version Control for Manifests
+
+    Keep manifest files in a version control system (e.g., Git).
+    Use GitOps practices for deployment.
+
+6.5. Monitoring and Logging
+
+    Implement monitoring with tools like Prometheus and Grafana.
+    Use centralized logging solutions (e.g., ELK Stack, EFK Stack).
+
+6.6. Namespace Isolation
+
+    Use namespaces to isolate environments (development, staging, production).
+    Apply NetworkPolicies for network isolation.
+
+6.7. Rolling Updates and Rollbacks
+
+    Use Deployments for rolling updates.
+    Monitor rollouts and be prepared to rollback if necessary.
+
+6.8. Use kubectl Aliases
+
+    Create aliases to improve efficiency.
+
+Example:
+
+bash
+
+alias k='kubectl'
+alias kgp='kubectl get pods'
+alias kga='kubectl get all'
+alias kdes='kubectl describe'
+
+6.9. Security Best Practices
+
+    Implement Role-Based Access Control (RBAC).
+    Regularly update images to patch vulnerabilities.
+    Use Pod Security Policies (deprecated in newer versions; use alternatives like Gatekeeper).
+
+6.10. Stay Updated
+
+    Keep up with Kubernetes releases and deprecated features.
+    Regularly review the official documentation and community resources.
+
+7. Practice Exercises
+
+To solidify your understanding, try creating manifests and kubectl commands for the following scenarios:
+
+    Create a Deployment with Autoscaling
+        Deployment running an Nginx image.
+        Autoscale between 2 and 10 replicas based on CPU usage.
+
+    Set Up a Blue-Green Deployment
+        Deploy versioned applications.
+        Switch traffic between versions without downtime.
+
+    Configure a Pod with Init Containers
+        Use an Init Container to set up prerequisites before the main container starts.
+
+    Implement NetworkPolicies
+        Restrict traffic between namespaces.
+        Allow only specific Pods to communicate.
+
+    Back Up and Restore ETCD Data
+        Use etcdctl to back up the cluster state.
+        Restore from backup in a simulated disaster recovery scenario.

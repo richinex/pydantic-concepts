@@ -1,0 +1,891 @@
+To elevate your Git proficiency and place you among the top 10% of users, we'll delve deeper into Git commands by demonstrating their effects on sample files. For each command, we'll provide detailed, code-like examples showing the state of files before and after the command execution. This hands-on approach will help you understand precisely what each command does in a real-world context.
+1. Introduction to Git with Sample Files
+
+We'll start with a simple project containing text files to illustrate the effects of Git commands. Suppose we have a project directory called my_project with the following files:
+
+    file1.txt
+    file2.txt
+
+Contents of file1.txt before any Git operation:
+
+plaintext
+
+Hello World!
+
+Contents of file2.txt before any Git operation:
+
+plaintext
+
+This is a sample file.
+
+2. Basic Git Commands with Detailed Examples
+2.1. git init
+
+Initializes a new Git repository in your current directory.
+
+Before:
+
+Your directory my_project contains:
+
+plaintext
+
+my_project/
+├── file1.txt
+└── file2.txt
+
+Command:
+
+bash
+
+cd my_project
+git init
+
+After:
+
+A new .git directory is created, which Git uses to track changes.
+
+plaintext
+
+my_project/
+├── .git/        # New directory created
+├── file1.txt
+└── file2.txt
+
+2.2. git add
+
+Adds changes in the working directory to the staging area.
+
+Scenario:
+
+You modify file1.txt.
+
+Contents of file1.txt after modification:
+
+plaintext
+
+Hello Git World!
+
+Command:
+
+bash
+
+git add file1.txt
+
+Effect:
+
+    file1.txt is now staged for commit.
+    file2.txt remains unmodified and unstaged.
+
+Check status:
+
+bash
+
+git status
+
+Output:
+
+plaintext
+
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        modified:   file1.txt
+
+2.3. git commit
+
+Records staged changes to the repository.
+
+Command:
+
+bash
+
+git commit -m "Update file1.txt with new greeting"
+
+After:
+
+    The changes in file1.txt are committed to the repository.
+    The staging area is now clean.
+
+Check log:
+
+bash
+
+git log --oneline
+
+Output:
+
+plaintext
+
+abc1234 (HEAD -> main) Update file1.txt with new greeting
+
+2.4. git status
+
+Displays the state of the working directory and staging area.
+
+Scenario:
+
+You create a new file file3.txt.
+
+Contents of file3.txt:
+
+plaintext
+
+New file added to the project.
+
+Command:
+
+bash
+
+git status
+
+Output:
+
+plaintext
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        file3.txt
+
+2.5. git diff
+
+Shows changes between the working directory and the last commit.
+
+Scenario:
+
+You modify file2.txt.
+
+Contents of file2.txt after modification:
+
+plaintext
+
+This is an updated sample file.
+
+Command:
+
+bash
+
+git diff
+
+Output:
+
+diff
+
+diff --git a/file2.txt b/file2.txt
+index e69de29..5c8b8d9 100644
+--- a/file2.txt
++++ b/file2.txt
+@@ -1 +1 @@
+-This is a sample file.
++This is an updated sample file.
+
+2.6. git branch and git checkout
+
+Manages branches and switches between them.
+
+Command to create a new branch:
+
+bash
+
+git branch feature-branch
+
+Command to switch to the new branch:
+
+bash
+
+git checkout feature-branch
+
+After:
+
+You're now working on feature-branch.
+
+Scenario:
+
+On feature-branch, you modify file3.txt.
+
+Contents of file3.txt on feature-branch:
+
+plaintext
+
+New file added to the project.
+Feature branch modifications.
+
+Commit the changes:
+
+bash
+
+git add file3.txt
+git commit -m "Modify file3.txt on feature-branch"
+
+2.7. git merge
+
+Merges branches together.
+
+Command to switch back to main branch:
+
+bash
+
+git checkout main
+
+Command to merge feature-branch into main:
+
+bash
+
+git merge feature-branch
+
+After:
+
+    Changes from feature-branch are now in main.
+    file3.txt on main now includes modifications from feature-branch.
+
+Contents of file3.txt on main after merge:
+
+plaintext
+
+New file added to the project.
+Feature branch modifications.
+
+2.8. git push
+
+Updates the remote repository with your commits.
+
+Scenario:
+
+Assuming you have a remote repository set up as origin.
+
+Command:
+
+bash
+
+git push origin main
+
+Effect:
+
+    Your commits on main are pushed to the remote repository origin.
+    Collaborators can now see and pull your changes.
+
+2.9. git pull
+
+Fetches and integrates changes from the remote repository.
+
+Scenario:
+
+A collaborator has pushed changes to main.
+
+Command:
+
+bash
+
+git pull origin main
+
+Effect:
+
+    Fetches the latest commits from origin/main.
+    Merges them into your local main branch.
+
+2.10. git rm
+
+Removes files from the working directory and staging area.
+
+Scenario:
+
+You decide to remove file2.txt.
+
+Command:
+
+bash
+
+git rm file2.txt
+git commit -m "Remove file2.txt as it's no longer needed"
+
+After:
+
+    file2.txt is deleted from your working directory.
+    The deletion is recorded in the repository.
+
+3. Intermediate Git Commands with Detailed Examples
+3.1. git stash
+
+Temporarily saves changes for later use.
+
+Scenario:
+
+You're working on file1.txt, but need to switch branches without committing incomplete work.
+
+Modified file1.txt:
+
+plaintext
+
+Hello Git World!
+In-progress changes...
+
+Command to stash changes:
+
+bash
+
+git stash
+
+After:
+
+    file1.txt reverts to the last committed state.
+    Your changes are saved in the stash.
+
+Command to list stashes:
+
+bash
+
+git stash list
+
+Output:
+
+plaintext
+
+stash@{0}: WIP on main: abc1234 Update file1.txt with new greeting
+
+Command to apply stashed changes:
+
+bash
+
+git stash pop
+
+After:
+
+    Your in-progress changes in file1.txt are restored.
+    The stash is removed from the stash list.
+
+3.2. git tag
+
+Marks specific points in history as important.
+
+Command to create a tag:
+
+bash
+
+git tag -a v1.0 -m "Release version 1.0"
+
+Effect:
+
+    A tag v1.0 is created at the current commit.
+    Useful for marking release points.
+
+Command to push tags to remote:
+
+bash
+
+git push origin v1.0
+
+3.3. git revert
+
+Creates a new commit that undoes changes from a previous commit.
+
+Scenario:
+
+You realize that commit def5678 introduced a bug.
+
+Command:
+
+bash
+
+git revert def5678
+
+After:
+
+    A new commit is created that reverses the changes from def5678.
+    The history remains linear and intact.
+
+3.4. git reset
+
+Resets current HEAD to a specified state.
+
+Scenario:
+
+You made an incorrect commit and want to undo it.
+
+Command to perform a soft reset (keeps changes in staging area):
+
+bash
+
+git reset --soft HEAD~1
+
+Effect:
+
+    Moves HEAD back by one commit.
+    Changes from the undone commit are staged.
+
+Command to perform a hard reset (discards changes):
+
+bash
+
+git reset --hard HEAD~1
+
+Effect:
+
+    Moves HEAD back by one commit.
+    Changes from the undone commit are lost.
+
+Warning: --hard reset discards uncommitted changes.
+3.5. git cherry-pick
+
+Applies changes from specific commits to the current branch.
+
+Scenario:
+
+You want to apply commit ghi7890 from feature-branch to main.
+
+Command:
+
+bash
+
+git checkout main
+git cherry-pick ghi7890
+
+After:
+
+    The changes from commit ghi7890 are applied to main.
+    A new commit is created on main with these changes.
+
+3.6. git rebase
+
+Reapplies commits on top of another base tip.
+
+Scenario:
+
+Your feature-branch is behind main and you want to update it.
+
+Command:
+
+bash
+
+git checkout feature-branch
+git rebase main
+
+Effect:
+
+    Replays commits from feature-branch onto the tip of main.
+    Creates a linear history.
+
+Before Rebase Visualization:
+
+plaintext
+
+main:         A---B---C
+               \
+feature-branch: D---E
+
+After Rebase Visualization:
+
+plaintext
+
+main:         A---B---C
+                       \
+feature-branch:         D'---E'
+
+3.7. git bisect
+
+Uses binary search to find the commit that introduced a bug.
+
+Scenario:
+
+You know that a bug was introduced somewhere between commit A and G.
+
+Commands:
+
+bash
+
+git bisect start
+git bisect bad         # Assume current HEAD is bad
+git bisect good A      # Starting point where code was good
+
+Process:
+
+    Git checks out the midpoint commit.
+    You test for the bug.
+        If the bug is present: git bisect bad
+        If the bug is absent: git bisect good
+    Repeat until the offending commit is found.
+
+After:
+
+Git identifies the exact commit that introduced the bug.
+4. Advanced Git Commands and Concepts with Detailed Examples
+4.1. Interactive Rebasing (git rebase -i)
+
+Allows you to edit, reorder, squash, or remove commits.
+
+Scenario:
+
+Your commit history looks like this:
+
+plaintext
+
+commit abc1234 (HEAD -> feature-branch)
+Author: You
+Date: Today
+
+    Fix typo in documentation
+
+commit def5678
+Author: You
+Date: Yesterday
+
+    Add new feature X
+
+commit ghi7890
+Author: You
+Date: Two days ago
+
+    Initial commit
+
+You want to squash abc1234 and def5678 into a single commit.
+
+Command:
+
+bash
+
+git rebase -i HEAD~3
+
+Interactive editor opens:
+
+plaintext
+
+pick ghi7890 Initial commit
+pick def5678 Add new feature X
+pick abc1234 Fix typo in documentation
+
+Modify to:
+
+plaintext
+
+pick ghi7890 Initial commit
+squash def5678 Add new feature X
+squash abc1234 Fix typo in documentation
+
+After saving and exiting:
+
+    Git prompts you to combine commit messages.
+    The commits are squashed into one.
+
+New commit history:
+
+plaintext
+
+commit jkl0123 (HEAD -> feature-branch)
+Author: You
+Date: Today
+
+    Add new feature X
+
+    Fix typo in documentation
+
+commit ghi7890
+Author: You
+Date: Two days ago
+
+    Initial commit
+
+4.2. Submodules
+
+Includes external repositories within your repository.
+
+Command to add a submodule:
+
+bash
+
+git submodule add https://github.com/other/repo.git libs/other-repo
+
+After:
+
+    A new directory libs/other-repo is added.
+    .gitmodules file is created to track submodules.
+
+Cloning a repository with submodules:
+
+bash
+
+git clone https://github.com/your/repo.git
+git submodule update --init --recursive
+
+4.3. Resolving Merge Conflicts
+
+Occurs when Git can't automatically merge changes.
+
+Scenario:
+
+Both you and a collaborator modify file1.txt on different branches.
+
+Your changes in file1.txt:
+
+plaintext
+
+Hello Git World!
+Your new changes.
+
+Collaborator's changes in file1.txt:
+
+plaintext
+
+Hello Git World!
+Collaborator's changes.
+
+When merging, Git detects a conflict.
+
+Conflict markers in file1.txt:
+
+plaintext
+
+Hello Git World!
+<<<<<<< HEAD
+Your new changes.
+=======
+Collaborator's changes.
+>>>>>>> feature-branch
+
+Resolution:
+
+Edit file1.txt to combine changes:
+
+plaintext
+
+Hello Git World!
+Your new changes.
+Collaborator's changes.
+
+Commands to complete the merge:
+
+bash
+
+git add file1.txt
+git commit -m "Resolve merge conflict in file1.txt"
+
+4.4. Git Hooks
+
+Scripts that run automatically on certain Git events.
+
+Creating a pre-commit hook to prevent committing TODO comments:
+
+File: .git/hooks/pre-commit
+
+bash
+
+#!/bin/sh
+if grep -rnw 'TODO' ./*.txt; then
+    echo "Error: Commit aborted due to TODO comments."
+    exit 1
+fi
+
+Make the hook executable:
+
+bash
+
+chmod +x .git/hooks/pre-commit
+
+Effect:
+
+    Before each commit, Git runs this script.
+    If any .txt files contain "TODO", the commit is aborted.
+
+4.5. git reflog
+
+Records when the tip of branches and other references were updated.
+
+Scenario:
+
+You accidentally reset your branch and lost commits.
+
+Command to view reflog:
+
+bash
+
+git reflog
+
+Output:
+
+plaintext
+
+abc1234 HEAD@{0}: reset: moving to HEAD~1
+def5678 HEAD@{1}: commit: Update file1.txt with new greeting
+ghi7890 HEAD@{2}: commit: Initial commit
+
+Command to restore lost commit:
+
+bash
+
+git reset --hard def5678
+
+After:
+
+    Your branch is restored to commit def5678.
+    Lost commits are recovered.
+
+4.6. git blame
+
+Shows what revision and author last modified each line of a file.
+
+Command:
+
+bash
+
+git blame file1.txt
+
+Output:
+
+plaintext
+
+def5678 (You       2023-10-01 15:20:30 +0000 1) Hello Git World!
+abc1234 (You       2023-10-02 10:15:00 +0000 2) Your new changes.
+
+4.7. Git Attributes and .gitignore
+
+Specifies files to ignore and defines attributes per path.
+
+Creating a .gitignore file:
+
+plaintext
+
+# Ignore log files
+*.log
+
+# Ignore all files in temp directories
+temp/
+
+Effect:
+
+    Files matching these patterns are not tracked by Git.
+    Helps keep the repository clean from unnecessary files.
+
+Creating a .gitattributes file:
+
+plaintext
+
+*.txt text eol=lf
+
+Effect:
+
+    Ensures .txt files use LF (Line Feed) line endings.
+    Useful when collaborating across different operating systems.
+
+4.8. Rewriting History with git filter-repo
+
+Used to rewrite Git history, such as removing sensitive data.
+
+Scenario:
+
+You accidentally committed a file passwords.txt containing sensitive data.
+
+Command to remove the file from history:
+
+bash
+
+git filter-repo --path passwords.txt --invert-paths
+
+Effect:
+
+    passwords.txt is removed from all commits.
+    The repository history is rewritten without the sensitive file.
+
+Warning: Rewriting history affects all collaborators. Coordinate before force-pushing changes.
+5. Best Practices and Tips with Examples
+5.1. Write Clear Commit Messages
+
+Example of a good commit message:
+
+bash
+
+git commit -m "Fix: Correct null pointer exception in user authentication"
+
+Structure:
+
+    Title: Brief summary (50 characters or less).
+    Body: Detailed explanation (optional).
+
+5.2. Branching Strategies
+
+Feature Branch Workflow:
+
+    Create a new branch for each feature:
+
+    bash
+
+git checkout -b feature/login
+
+Develop and commit on this branch.
+
+Merge back into main after code review:
+
+bash
+
+    git checkout main
+    git merge feature/login
+
+5.3. Handle Merge Conflicts Carefully
+
+    Stay Updated: Regularly pull changes from the remote repository.
+
+    bash
+
+    git pull origin main
+
+    Communicate: Inform team members about large changes.
+
+    Use Tools: Utilize merge tools like git mergetool.
+
+5.4. Use Git Aliases
+
+Creating useful aliases:
+
+bash
+
+git config --global alias.st status
+git config --global alias.ci commit
+git config --global alias.br branch
+git config --global alias.co checkout
+git config --global alias.df diff
+
+Usage:
+
+    git st instead of git status
+    git ci -m "Message" instead of git commit -m "Message"
+
+5.5. Secure Sensitive Data
+
+    Use .gitignore: To prevent tracking sensitive files.
+
+    Example:
+
+    plaintext
+
+    # .gitignore
+    passwords.txt
+    config/secret.yml
+
+    Remove Sensitive Data: If already committed, use git filter-repo.
+
+5.6. Use Pull Requests for Code Reviews
+
+    Fork the repository (if necessary).
+
+    Create a feature branch:
+
+    bash
+
+git checkout -b feature/new-ui
+
+Push the branch to the remote:
+
+bash
+
+    git push origin feature/new-ui
+
+    Create a pull request on the platform (e.g., GitHub).
+
+    Team reviews the code before merging.
+
+6. Conclusion
+
+By working through these detailed examples, you've seen how Git commands affect the files in your project at each step. This hands-on understanding will empower you to manage repositories confidently and effectively, setting you apart as a proficient Git user.
+
+Next Steps:
+
+    Practice: Set up a test repository and try out these commands.
+    Collaborate: Work on projects with others to experience real-world scenarios.
+    Explore Advanced Features: Look into Git's internals, custom hooks, and more.
