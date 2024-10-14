@@ -1,0 +1,145 @@
+What does an OS do
+====================
+An OS basically abstracts over the hardware and provide us with an api. the kernal is the part that provides such an API
+
+How do we provide isolation in Linux
+====================================
+Namespaces and Cgroups
+1. Namespaces allow multiple processes with the same PID by providing different contexts or namespaces. This creates an illusion of restricted visibility on resources for multiple users of processes running in parallel.
+
+2. Cgroups provide isolation - i.e restricting teh memory consumption so that one process cannot starve another process
+
+VMs on the other hand provide full isolation.
+
+POSIX (Portable Operating System Interface)
+================================================
+POSIX is an IEEE standard to define service interfaces for UNIX OS - in order to provide portability between different implementations
+https://oreil.ly/DO04h
+
+Linux Architecture
+===================
+At a high level, the Linux architecture looks as depicted in Figure 2-1. There are three distinct layers you can group things into:
+
+Hardware
+From CPUs and main memory to disk drives, network interfaces, and peripheral devices such as keyboards and monitors.
+
+The kernel
+The focus of the rest of this chapter. Note that there are a number of components that sit between the kernel and user land, such as the init system and system services (networking, etc.), but that are, strictly speaking, not part of the kernel.
+
+User land
+Where the majority of apps are running, including operating system components such as shells (discussed in Chapter 3), utilities like ps or ssh, and graphical user interfaces such as X Window System–based desktops
+
+CPU Architectures
+=====================
+x86 Architecture
+x86 is an instruction set family originally developed by Intel and later licensed to Advanced Micro Devices (AMD). Within the kernel, x64 refers to the Intel 64-bit processors, and x86 stands for Intel 32-bit. Further, amd64 refers to AMD 64-bit processors.
+
+Today, you’ll mostly find the x86 CPU family in desktops and laptops, but it’s also widely used in servers. Specifically, x86 forms the basis of the public cloud. It is a powerful and widely available architecture but isn’t very energy efficient. Partially due to its heavy reliance on out-of-order execution, it recently received a lot of attention around security issues such as Meltdown.
+
+For further details, for example the Linux/x86 boot protocol or Intel and AMD specific background, see the x86-specific kernel documentation.
+
+ARM Architecture
+More than 30 years old, ARM is a family of Reduced Instruction Set Computing (RISC) architectures. RISC usually consists of many generic CPU registers along with a small set of instructions that can be executed faster.
+
+Because the designers at Acorn—the original company behind ARM—focused from the get-go on minimal power consumption, you find ARM-based chips in a number of portable devices such as iPhones. They are also in most Android-based phones and in embedded systems found in IoT, such as in the Raspberry Pi.
+
+Given that they are fast, cheap, and produce less heat than x86 chips, you shouldn’t be surprised to increasingly find ARM-based CPUs—such as AWS Graviton—in the data center. While simpler than x86, ARM is not immune to vulnerabilities, such as Spectre. For further details, see the ARM-specific kernel documentation.
+
+RISC-V Architecture
+An up-and-coming player, RISC-V (pronounced risk five) is an open RISC standard that was originally developed by the University of California, Berkeley. As of 2021, a number of implementations exist, ranging from Alibaba Group and Nvidia to start-ups such as SiFive. While exciting, this is a relatively new and not widely used (yet) CPU family, and to get an idea how it look and feels, you may want to research it a little—a good start is Shae Erisson’s article “Linux on RISC-V”.
+
+For further details, see the RISC-V kernel documentation.
+
+Kernel Components
+=====================
+
+The kernel sits between the hardware and the apps you want to run. The main functional blocks you find in the kernel code base are as follows:
+
+Process Management
+=======================
+Process management, such as starting a process based on an executable file.
+a process is the user-facing unit, based on an executable program (or binary). A thread, on the other hand, is a unit of execution in the context of a process. You might have come across the term multithreading, which means that a process has a number of parallel executions going on, potentially running on different CPUs. Linux has the following:
+
+- Sessions
+Contain one or more process groups and represent a high-level user-facing unit with optional tty attached. The kernel identifies a session via a number called session ID (SID).
+
+- Process groups
+Contain one or more processes, with at most one process group in a session as the foreground process group. The kernel identifies a process group via a number called process group ID (PGID).
+
+- Processes
+Abstractions that group multiple resources (address space, one or more threads, sockets, etc.), which the kernel exposes to you via /proc/self for the current process. The kernel identifies a process via a number called process ID (PID).
+
+- Threads
+Implemented by the kernel as processes. That is, there are no dedicated data structures representing threads. Rather, a thread is a process that shares certain resources (such as memory or signal handlers) with other processes. The kernel identifies a thread via thread IDs (TID) and thread group IDs (TGID), with the semantics that a shared TGID value means a multithreaded process (in user land; there are also kernel threads, but that’s beyond our scope).
+
+- Tasks
+In the kernel there is a data structure called task_struct—defined in sched.h—that forms the basis of implementing processes and threads alike. This data structure captures scheduling-related information, identifiers (such as PID and TGID), and signal handlers, as well as other information, such as that related to performance and security. In a nutshell, all of the aforementioned units are derived and/or anchored in tasks; however, tasks are not exposed as such outside of the kernel.
+
+Different events cause state transitions. For example, a running process might transition to the waiting state when it carries out some I/O operation (such as reading from a file) and can’t proceed with execution (off CPU).
+
+Memory Management
+====================
+Memory management, such as allocating memory for a process or map a file into memory
+
+Virtual memory makes your system appear as if it has more memory than it physically has. In fact, every process gets a lot of (virtual) memory. This is how it works: both physical memory and virtual memory are divided into fixed-length chunks we call pages. A page table exists that maps  virtual pages of the process into physical pages in main memory (aka RAM).
+Multiple virtual pages can point to the same physical page via their respective process-level page tables. This is, in a sense, the core of memory management: how to effectively provide each process with the illusion that its page actually exists in RAM while using the existing space optimally.
+
+Every time the CPU accesses a process’s virtual page, the CPU would in principle have to translate the virtual address a process uses to the corresponding physical address. To speed up this process—which can be multilevel and hence slow—modern CPU architectures support a lookup on-chip called translation lookaside buffer (TLB). The TLB is effectively a small cache that, in case of a miss, causes the CPU to go via the process page table(s) to calculate the physical address of a page and update the TLB with it.
+
+Traditionally, Linux had a default page size of 4 KB, but since kernel v2.6.3, it supports huge pages, to better support modern architectures and workloads. For example, 64-bit Linux allows you to use up to 128 TB of virtual address space (with virtual being the theoretical addressable number of memory addresses) per process, with an approximate 64 TB of physical memory (with physical being the amount of RAM you have in your machine) in total.
+
+Networking
+==============
+Networking, like managing network interfaces or providing the network stack. The kernel provides networking functionality. This allows you to either browse the web or copy data to  a remote system.
+The Linux network stack follows a layered architecture.
+
+- Sockets: for abstracting communication
+- Transmission Control Protocol (TCP) and User Datagram Protocol (UDP): For connection oriented communication and connectionless communication, respectively
+- Internet Protocol (IP): For addressing machines
+
+NB: The application layer protocols such as HTTP or SSH are, usually, implemented in user land.
+
+Filesystems
+============
+Filesystems providing file management and supporting the creation and deletion of files
+Linux uses filesystems to organize files and directories on storage devices such as hard disk drives (HDDs) and solid-state drives (SSDs) or flash memory. There are many types of filesystems, such as ext4 and btrfs or NTFS, and you can have multiple instances of the same filesystem in use.
+
+Virtual File System (VFS) was originally introduced to support multiple filesystem types and instances. The highest layer in VFS provides a common API abstraction of functions such as open, close, read, and write. At the bottom of VFS are filesystem abstractions called plug-ins for the given filesystem.
+
+Device Drivers
+===================
+A driver is a bit of code that runs in the kernel. Its job is to manage a device, which can be actual hardware—like a keyboard, a mouse, or hard disk drives—or it can be a pseudo-device such as a pseudo-terminal under /dev/pts/ (which is not a physical device but can be treated like one).
+
+Another interesting class of hardware are graphics processing units (GPUs), which traditionally were used to accelerate graphics output and ease the load on the CPU. In recent years, GPUs have found a new use case in the context of machine learning, and hence they are not exclusively relevant in desktop environments.
+
+The driver may be built statically into the kernel, or it can be built as a kernel module (see “Modules”) so that it can be dynamically loaded when needed.
+Management of character devices and device drivers
+
+These functional components often come with interdependencies, and it’s a truly challenging task to make sure that the kernel developer motto “Kernel never breaks user land” holds true.
+
+Syscalls
+============
+Whether you sit in front of a terminal and type touch test.txt or whether one of your apps wants to download the content of a file from a remote system, at the end of the day you ask Linux to turn the high-level instruction, such as “create a file” or “read all bytes from address so and so,” into a set of concrete, architecture-dependent steps. In other words, the service interface the kernel exposes and that user land entities call is the set of system calls, or syscalls for short.
+
+Linux has hundreds of syscalls: around three hundred or more, depending on the CPU family. However, you and your programs don’t usually invoke these syscalls directly but via what we call the C standard library. The standard library provides wrapper functions and is available in various implementations, such as glibc or musl.
+
+These wrapper libraries perform an important task. They take care of the repetitive low-level handling of the execution of a syscall. System calls are implemented as software interrupts, causing an exception that transfers the control to an exception handler
+
+Category            Example syscalls
+------------------  -------------------------------------------------------------------------
+Process management  clone, fork, execve, wait, exit, getpid, setuid, setns, getrusage, capset, ptrace
+
+Memory management   brk, mmap, munmap, mremap, mlock, mincore
+
+Networking          socket, setsockopt, getsockopt, bind, listen, accept, connect, shutdown, recvfrom,
+                    recvmsg, sendto, sethostname, bpf
+
+Filesystems         open, openat, close, mknod, rename, truncate, mkdir, rmdir, getcwd, chdir, chroot,
+                    getdents, link, symlink, unlink, umask, stat, chmod, utime, access, ioctl, flock, read,
+                    write, lseek, sync, select, poll, mount
+
+Time                time, clock_settime, timer_create, alarm, nanosleep
+
+Signals             kill, pause, signalfd, eventfd
+
+Global              uname, sysinfo, syslog, acct, _sysctl, iopl, reboot

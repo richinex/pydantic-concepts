@@ -1,0 +1,193 @@
+- Ctrl+H causes a backspace, which deletes the character to the left of the cursor.
+
+- $ infocmp
+#       Reconstructed via infocmp from file: /lib/terminfo/s/screen-256color
+screen-256color|GNU Screen with 256 colors,
+        am, km, mir, msgr, xenl,
+        colors#0x100, cols#80, it#8, lines#24, pairs#0x10000,
+        acsc=++\,\,--..00``aaffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~,
+        bel=^G, blink=\E[5m, bold=\E[1m, cbt=\E[Z, civis=\E[?25l,
+        clear=\E[H\E[J, cnorm=\E[34h\E[?25h, cr=\r,
+        ...
+ The output of infocmp is not easy to digest. If you want to learn about the capabilities in detail, consult the terminfo database. For example, in my concrete output, the terminal supports 80 columns (cols#80) and 24 lines (lines#24) for output as well as 256 colors (colors#0x100, in hexadecimal notation).
+ 
+ Discard all output by redirecting both stdout and stderr to /dev/null.
+- $ curl https://example.com &> /dev/null 
+
+Redirect the output and status to different files.
+$ curl https://example.com > /tmp/content.txt 2> /tmp/curl-status 
+$ head -3 /tmp/content.txt
+<!doctype html>
+<html>
+<head>
+$ cat /tmp/curl-status
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  1256  100  1256    0     0   3187      0 --:--:-- --:--:-- --:--:--  3195
+
+
+Interactively enter input and save to file; use Ctrl+D to stop capturing and store the content.
+$ cat > /tmp/interactive-input.txt 
+
+Lowercase all words, using the tr command that reads from stdin.
+$ tr < /tmp/curl-status [A-Z] [a-z] 
+  % total    % received % xferd  average speed   time    time     time  current
+                                 dload  upload   total   spent    left  speed
+100  1256  100  1256    0     0   3187      0 --:--:-- --:--:-- --:--:--  3195
+
+Use curl to download the content from the URL, and discard the status that it outputs on stderr. (Note: in practice, you’d use the -s option of curl. The stdout of curl is fed to stdin of wc, which counts the number of lines with the -l option.
+
+
+$ curl https://example.com 2> /dev/null | \ 
+  wc -l 
+46
+
+# Shell and Environment variables
+===================================
+
+Create a shell variable called MY_VAR, and assign a value of 42.
+$ set MY_VAR=42 
+List shell variables and filter out MY_VAR. Note the _=, indicating it’s not exported.
+$ set | grep MY_VAR 
+_=MY_VAR=42
+
+
+Create a new environment variable called MY_GLOBAL_VAR.
+$ export MY_GLOBAL_VAR="fun with vars" 
+
+List shell variables and filter out all that start with MY_. We see, as expected, both of the variables we created in the previous steps.
+$ set | grep 'MY_*' 
+MY_GLOBAL_VAR='fun with vars'
+_=MY_VAR=42
+
+
+List environment variables. We see MY_GLOBAL_VAR, as we would hope.
+$ env | grep 'MY_*' 
+MY_GLOBAL_VAR=fun with vars
+
+
+Create a new shell session—that is, a child process of the current shell session that doesn’t inherit MY_VAR.
+$ bash 
+Access the environment variable MY_GLOBAL_VAR.
+$ echo $MY_GLOBAL_VAR 
+fun with vars
+
+List the shell variables, which gives us only MY_GLOBAL_VAR since we’re in a child process.
+$ set | grep 'MY_*' 
+MY_GLOBAL_VAR='fun with vars'
+
+Exit the child process, remove the MY_VAR shell variable, and list our shell variables. As expected, MY_VAR is gone.
+$ exit 
+$ unset $MY_VAR
+$ set | grep 'MY_*'
+MY_GLOBAL_VAR='fun with vars'
+
+# Job Control
+-----------------
+By putting the & at the end, we launch the command in the background.
+
+$ watch -n 5 "ls" & 
+
+
+List all jobs.
+$ jobs 
+Job     Group   CPU     State   Command
+1       3021    0%      stopped watch -n 5 "ls" &
+
+With the fg command, we can bring a process to the foreground. If you want to quit the watch command, use Ctrl+C.
+$ fg 
+Every 5.0s: ls                                         Sat Aug 28 11:34:32 2021
+
+Dockerfile
+app.yaml
+example.json
+main.go
+script.sh
+test
+
+NB: If you want to keep a background process running, even after you close the shell you can prepend the nohup command. Further, for a process that is already running and wasn’t prepended with nohup, you can use disown after the fact to achieve the same effect. Finally, if you want to get rid of a running process, you can use the kill command with various levels of forcefulness 
+
+Listing directory contents with exa
+Whenever you want to know what a directory contains, you use ls or one of its variants with parameters. For example, in bash I used to have l aliased to ls -GAhltr. But there’s a better way: exa, a modern replacement for ls, written in Rust, with built-in support for Git and tree rendering. In this context, what would you guess is the most often used command after you’ve listed the directory content? In my experience it’s to clear the screen, and very often people use clear. That’s typing five characters and then hitting ENTER. You can have the same effect much faster—simply use Ctrl+L.
+
++-------------------------------------+--------+---------------------------+
+| Action                              | Command| Note                      |
++-------------------------------------+--------+---------------------------+
+| Move cursor to start of line        | Ctrl+a | -                         |
++-------------------------------------+--------+---------------------------+
+| Move cursor to end of line          | Ctrl+e | -                         |
++-------------------------------------+--------+---------------------------+
+| Move cursor forward one character   | Ctrl+f | -                         |
++-------------------------------------+--------+---------------------------+
+| Move cursor back one character      | Ctrl+b | -                         |
++-------------------------------------+--------+---------------------------+
+| Move cursor forward one word        | Alt+f  | Works only with left Alt  |
++-------------------------------------+--------+---------------------------+
+| Move cursor back one word           | Alt+b  | -                         |
++-------------------------------------+--------+---------------------------+
+| Delete current character            | Ctrl+d | -                         |
++-------------------------------------+--------+---------------------------+
+| Delete character left of cursor     | Ctrl+h | -                         |
++-------------------------------------+--------+---------------------------+
+| Delete word left of cursor          | Ctrl+w | -                         |
++-------------------------------------+--------+---------------------------+
+| Delete everything right of cursor   | Ctrl+k | -                         |
++-------------------------------------+--------+---------------------------+
+| Delete everything left of cursor    | Ctrl+u | -                         |
++-------------------------------------+--------+---------------------------+
+| Clear screen                        | Ctrl+l | -                         |
++-------------------------------------+--------+---------------------------+
+| Cancel command                      | Ctrl+c | -                         |
++-------------------------------------+--------+---------------------------+
+| Undo                                | Ctrl+_ | bash only                 |
++-------------------------------------+--------+---------------------------+
+| Search history                      | Ctrl+r | Some shells               |
++-------------------------------------+--------+---------------------------+
+| Cancel search                       | Ctrl+g | Some shells               |
++-------------------------------------+--------+---------------------------+
+
+# Viewing Long Files
+-----------------------
+$ for i in {1..100} ; do echo $i >> /tmp/longfile ; done 
+
+$ head -5 /tmp/longfile 
+1
+2
+3
+4
+5
+
+Or, to get live updates of a file that is constantly growing, we could use:
+
+$ sudo tail -f /var/log/Xorg.0.log 
+[ 36065.898] (II) event14 - ALPS01:00 0911:5288 Mouse: device is a pointer
+[ 36065.900] (II) event15 - ALPS01:00 0911:5288 Touchpad: device is a touchpad
+[ 36065.901] (II) event4  - Intel HID events: is tagged by udev as: Keyboard
+[ 36065.901] (II) event4  - Intel HID events: device is a keyboard
+...
+
+Date and time handling
+The date command can be a useful way to generate unique file names. It allows you to generate dates in various formats, including the Unix time stamp, as well as to convert between different date and time formats.
+
+$ date +%s 
+1629582883
+
+$ date -d @1629742883 '+%m/%d/%Y:%H:%M:%S' 
+08/21/2021:21:54:43
+
+Create a UNIX time stamp.
+
+
+Convert a UNIX time stamp to a human-readable date.
+
+The UNIX epoch time (or simply UNIX time) is the number of seconds elapsed since 1970-01-01T00:00:00Z. UNIX time treats every day as exactly 86,400 seconds long.
+
+If you’re dealing with software that stores UNIX time as a signed 32-bit integer, you might want to pay attention since this will cause issues on 2038-01-19, as then the counter will overflow, which is also known as the Year 2038 problem.
+
+find .: Start searching in the current directory (.) and its subdirectories.
+-type f: Look for files only (not directories or other types).
+-name "*.yaml": Match files with names ending in ".yaml".
+-exec: Execute a command on each file found.
+grep "sample" '{}': The command to execute. It searches for the word "sample" in each file. {} is a placeholder for the filename.
+\;: Terminates the -exec command. The backslash is used to escape the semicolon, preventing the shell from interpreting it.
+-print: Print the name of each file that matches all the criteria (i.e., is a .yaml file and contains "sample").

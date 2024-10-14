@@ -1,0 +1,21 @@
+# exa, bat, rg
+Listing directory contents with exa
+Whenever you want to know what a directory contains, you use ls or one of its variants with parameters. For example, in bash I used to have l aliased to ls -GAhltr. But there’s a better way: exa, a modern replacement for ls, written in Rust, with built-in support for Git and tree rendering. In this context, what would you guess is the most often used command after you’ve listed the directory content? In my experience it’s to clear the screen, and very often people use clear. That’s typing five characters and then hitting ENTER. You can have the same effect much faster—simply use Ctrl+L.
+
+Viewing file contents with bat
+Let’s assume that you listed a directory’s contents and found a file you want to inspect. You’d use cat, maybe? There’s something better I recommend you have a look at: bat. The bat command, shown in Figure 3-3, comes with syntax highlighting, shows nonprintable characters, supports Git, and has an integrated pager (the page-wise viewing of files longer than what can be displayed on the screen).
+
+Finding content in files with rg
+Traditionally, you would use grep to find something in a file. However, there’s a modern command, rg, that is fast and powerful.
+
+We’re going to compare rg to a find and grep combination in this example, where we want to find YAML files that contain the string “sample”:
+
+$ find . -type f -name "*.yaml" -exec grep "sample" '{}' \; -print 1
+      app: sample
+        app: sample
+./app.yaml
+
+$ rg -t "yaml" sample 2
+app.yaml
+9:      app: sample
+14:        app: sample

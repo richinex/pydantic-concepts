@@ -1,0 +1,169 @@
+$ cat /proc/cpuinfo | grep "model name"
+
+
+$ cat /proc/cpuinfo | grep "model name"
+
+$ cat /proc/$$/status | head -n6 
+Name:   bash
+Umask:  0002
+State:  S (sleeping)
+Tgid:   2056
+Ngid:   0
+Pid:    2056
+
+// To figure out what cpu your linux is running on use the tool dmidecode or
+$ lscpu
+Architecture:                x86_64 
+CPU op-mode(s):              32-bit, 64-bit
+Byte Order:                  Little Endian
+Address sizes:               40 bits physical, 48 bits virtual
+CPU(s):                      4 
+On-line CPU(s) list:         0-3
+Thread(s) per core:          1
+Core(s) per socket:          4
+Socket(s):                   1
+NUMA node(s):                1
+Vendor ID:                   GenuineIntel
+CPU family:                  6
+Model:                       60
+Model name:                  Intel Core Processor (Haswell, no TSX, IBRS) 
+Stepping:                    1
+CPU MHz:                     2592.094
+...
+
+Another way to glean similar architecture information is by using cat /proc/cpuinfo, or, if you’re only interested in the architecture, by simply calling uname -m.
+
+# To see an example process and the corresponding task level information we use the command:
+$ ps -j
+PID    PGID   SID   TTY     TIME CMD
+6756   6756   6756  pts/0   00:00:00 bash 1
+6790   6790   6756  pts/0   00:00:00 ps 2
+
+
+The bash shell process has PID, PGID, and SID of 6756. From ls -al /proc/6756/task/6756/, we can glean the task-level information.
+The ps process has PID/PGID 6790 and the same SID as the shell.
+
+# Memory: A very useful tool to figure out memory-related information such as how much RAM is available to you is the /proc/meminfo interface:
+
+$grep MemTotal /proc/meminfo - shows the details on physical memory
+
+$grep VmallocTotal /proc/meminfo - Lists details on virtual memory
+
+$grep Huge /proc/meminfo - Lists huge pages info
+
+# Networking
+You can get an overview of your network interfaces using
+$ ip link
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode
+   DEFAULT group default qlen 1000 link/loopback 00:00:00:00:00:00
+   brd 00:00:00:00:00:00
+2: enp0s1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state
+   UP mode DEFAULT group default qlen 1000 link/ether 52:54:00:12:34:56
+   brd ff:ff:ff:ff:ff:ff
+   
+# Device Drivers
+To get an overview of the devices on your Linux system, you can use the following:
+
+$ ls -al /sys/devices/
+total 0
+drwxr-xr-x 15 root root 0 Aug 17 15:53 .
+dr-xr-xr-x 13 root root 0 Aug 17 15:53 ..
+drwxr-xr-x  6 root root 0 Aug 17 15:53 LNXSYSTM:00
+drwxr-xr-x  3 root root 0 Aug 17 15:53 breakpoint
+drwxr-xr-x  3 root root 0 Aug 17 17:41 isa
+drwxr-xr-x  4 root root 0 Aug 17 15:53 kprobe
+drwxr-xr-x  5 root root 0 Aug 17 15:53 msr
+drwxr-xr-x 15 root root 0 Aug 17 15:53 pci0000:00
+drwxr-xr-x 14 root root 0 Aug 17 15:53 platform
+drwxr-xr-x  8 root root 0 Aug 17 15:53 pnp0
+drwxr-xr-x  3 root root 0 Aug 17 15:53 software
+drwxr-xr-x 10 root root 0 Aug 17 15:53 system
+drwxr-xr-x  3 root root 0 Aug 17 15:53 tracepoint
+drwxr-xr-x  4 root root 0 Aug 17 15:53 uprobe
+drwxr-xr-x 18 root root 0 Aug 17 15:53 virtual
+
+Further, you can use the following to list mounted devices:
+
+$ mount
+sysfs on /sys type sysfs (rw,nosuid,nodev,noexec,relatime)
+proc on /proc type proc (rw,nosuid,nodev,noexec,relatime)
+devpts on /dev/pts type devpts (rw,nosuid,noexec,relatime,gid=5,mode=620, \
+ptmxmode=000)
+...
+tmpfs on /run/snapd/ns type tmpfs (rw,nosuid,nodev,noexec,relatime,\
+size=401464k,mode=755,inode64)
+nsfs on /run/snapd/ns/lxd.mnt type nsfs (rw)
+
+# Syscalls
+Let’s assume you wonder what syscalls are involved when you execute the innocent-looking ls command. Here’s how you can find it out using strace:
+
+$ strace ls 
+execve("/usr/bin/ls", ["ls"], 0x7ffe29254910 /* 24 vars */) = 0 
+brk(NULL)                           = 0x5596e5a3c000 
+...
+access("/etc/ld.so.preload", R_OK)  = -1 ENOENT (No such file or directory) 
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3 
+...
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0 p\0\0\0\0\0\0"..., \
+832) = 832 
+...
+
+With strace ls, we ask strace to capture the syscall that ls uses. Note that I edited the output since strace generates some 162 lines on my system (this number varies between different distros, architectures, and other factors). Further, the output you see there comes via stderr, so if you want to redirect it, you have to use 2> here. You’ll learn more about this in Chapter 3.
+
+
+The syscall execve executes /usr/bin/ls, causing the shell process to be replaced.
+
+
+The brk syscall is an outdated way to allocate memory; it’s safer and more portable to use malloc. Note that malloc is not a syscall but a function that in turn uses mallocopt to decide if it needs to use the brk syscall or the mmap syscall based on the amount of memory accessed.
+
+
+The access syscall checks if the process is allowed to access a certain file.
+
+
+Syscall openat opens the file /etc/ld.so.cache relative to a directory file descriptor (here the first argument, AT_FDCWD, which stands for the current directory) and using flags O_RDONLY|O_CLOEXEC (last argument).
+
+
+The read syscall reads from a file descriptor (first argument, 3) 832 bytes (last argument) into a buffer (second argument).
+
+strace is useful to see exactly what syscalls have been called—in which order and with which arguments—effectively hooking into the live stream of events between user land and kernel. It’s also good for performance diagnostics. Let’s see where a curl command spends most of its time (output shortened):
+
+$ strace -c \ 
+         curl -s https://mhausenblas.info > /dev/null 
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 26.75    0.031965         148       215           mmap
+ 17.52    0.020935         136       153         3 read
+ 10.15    0.012124         175        69           rt_sigaction
+  8.00    0.009561         147        65         1 openat
+  7.61    0.009098         126        72           close
+  ...
+  0.00    0.000000           0         1           prlimit64
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.119476         141       843        11 total
+
+Use the -c option to generate overview stats of the syscalls used.
+
+
+Discard all output of curl.
+
+Interestingly, the curl command here spends almost half of its time with mmap and read syscalls, and the connect syscall takes 0.3 ms—not bad.
+
+
+Category            Example syscalls
+------------------  -------------------------------------------------------------------------
+Process management  clone, fork, execve, wait, exit, getpid, setuid, setns, getrusage, capset, ptrace
+
+Memory management   brk, mmap, munmap, mremap, mlock, mincore
+
+Networking          socket, setsockopt, getsockopt, bind, listen, accept, connect, shutdown, recvfrom,
+                    recvmsg, sendto, sethostname, bpf
+
+Filesystems         open, openat, close, mknod, rename, truncate, mkdir, rmdir, getcwd, chdir, chroot,
+                    getdents, link, symlink, unlink, umask, stat, chmod, utime, access, ioctl, flock, read,
+                    write, lseek, sync, select, poll, mount
+
+Time                time, clock_settime, timer_create, alarm, nanosleep
+
+Signals             kill, pause, signalfd, eventfd
+
+Global              uname, sysinfo, syslog, acct, _sysctl, iopl, reboot

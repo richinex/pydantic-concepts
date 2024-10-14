@@ -1,0 +1,147 @@
+So basically its the shel that runs our programs. The terminal is a shell that exposes a command-line interface.
+
+There are two major ways to interact with Linux, from a CLI perspective. 
+- The first way is manually—that is, a human user sits in front of the terminal, interactively typing commands and consuming the output. This ad-hoc interaction works for most of the things you want to do in the shell on a day-to-day basis, including the following:
+
+Listing directories, finding files, or looking for content in files
+
+Copying files between directories or to remote machines
+
+Reading emails or the news or sending a Tweet from the terminal
+
+- The other mode of operation is the automated processing of a series of commands in a special kind of file that the shell interprets for you and in turn executes. This mode is usually called shell scripting or just scripting. You typically want to use a script rather than manually repeating certain tasks. Also, scripts are the basis of many config and install systems. Scripts are indeed very convenient. However, they can also pose a danger if used without precautions.
+
+Terminals
+================
+We start with the terminal, or terminal emulator, or soft terminal, all of which refer to the same thing: a terminal is a program that provides a textual user interface. That is, a terminal supports reading characters from the keyboard and displaying them on the screen. Many years ago, these used to be integrated devices (keyboard and screen together), but nowadays terminals are simply apps.
+
+In addition to the basic character-oriented input and output, terminals support so-called escape sequences, or escape codes, for cursor and screen handling and potentially support for colors. For example, pressing Ctrl+H causes a backspace, which deletes the character to the left of the cursor.
+
+The environment variable TERM has the terminal emulator in use, and its configuration is available via infocmp as follows (note that the output has been shortened):
+
+Shells
+=======
+Next up is the shell, a program that runs inside the terminal and acts as a command interpreter. The shell offers input and output handling via streams, supports variables, has some built-in commands you can use, deals with command execution and status, and usually supports both interactive usage as well as scripted usage (“Scripting”).
+
+The shell is formally defined in sh, and we often come across the term POSIX shell, which will become more important in the context of scripts and portability.
+
+Originally, we had the Bourne shell sh, named after the author, but nowadays it’s usually replaced with the bash shell—a wordplay on the original version, short for “Bourne Again Shell”—which is widely used as the default.
+
+If you are curious about what you’re using, use the file -h /bin/sh command to find out, or if that fails, try echo $0 or echo $SHELL.
+
+Streams
+================
+Let’s start with the topic of input (streams) and output (streams), or I/O for short. How can you feed a program some input? How do you control where the output of a program lands, say, on the terminal or in a file?
+
+First off, the shell equips every process with three default file descriptors (FDs) for input and output:
+
+stdin (FD 0)
+
+stdout (FD 1)
+
+stderr (FD 2)
+
+These FDs are, as depicted in Figure 3-2, by default connected to your screen and keyboard, respectively. In other words, unless you specify something else, a command you enter in the shell will take its input (stdin) from your keyboard, and it will deliver its output (stdout) to your screen.
+
+If you don’t want to use the defaults the shell gives you—for example, you don’t want stderr to be outputted on the screen but want to save it in a file—you can redirect the streams.
+
+You redirect the output stream of a process using $FD> and <$FD, with $FD being the file descriptor—for example, 2> means redirect the stderr stream. Note that 1> and > are the same since stdout is the default. If you want to redirect both stdout and stderr, use &>, and when you want to get rid of a stream, you can use /dev/null.
+
+Shells usually understand a number of special characters, such as:
+
+Ampersand (&)
+Placed at the end of a command, executes the command in the background (see also “Job control”)
+
+Backslash (\)
+Used to continue a command on the next line, for better readability of long commands
+
+Pipe (|)
+Connects stdout of one process with the stdin of the next process, allowing you to pass data without having to store it in files as a temporary place
+
+Variables
+=================
+A term you will come across often in the context of shells is variables. Whenever you don’t want to or cannot hardcode a value, you can use a variable to store and change a value. Use cases include the following:
+
+When you want to handle configuration items that Linux exposes—for example, the place where the shell looks for executables captured in the $PATH variable. This is kind of an interface where a variable might be read/write.
+
+When you want to interactively query the user for a value, say, in the context of a script.
+
+When you want to shorten input by defining a long value once—for example, the URL of an HTTP API. This use case roughly corresponds to a const value in a program language since you don’t change the value after you have declared the variable.
+
+We distinguish between two kinds of variables:
+
+Environment variables
+Shell-wide settings; list them with env.
+
+Shell variables
+Valid in the context of the current execution; list with set in bash. Shell variables are not inherited by subprocesses.
+
+You can, in bash, use export to create an environment variable. When you want to access the value of a variable, put a $ in front of it, and when you want to get rid of it, use unset.
+
++----------+-------------+------------------------------------------------------------------+
+| Variable | Type        | Semantics                                                         |
++----------+-------------+------------------------------------------------------------------+
+| EDITOR   | Environment | The path to program used by default to edit files                 |
++----------+-------------+------------------------------------------------------------------+
+| HOME     | POSIX       | The path of the home directory of the current user                |
++----------+-------------+------------------------------------------------------------------+
+| HOSTNAME | bash shell  | The name of the current host                                      |
++----------+-------------+------------------------------------------------------------------+
+| IFS      | POSIX       | List of characters to separate fields; used when the shell splits |
+|          |             | words on expansion                                                |
++----------+-------------+------------------------------------------------------------------+
+| PATH     | POSIX       | Contains a list of directories in which the shell looks for       |
+|          |             | executable programs (binaries or scripts)                         |
++----------+-------------+------------------------------------------------------------------+
+| PS1      | Environment | The primary prompt string in use                                  |
++----------+-------------+------------------------------------------------------------------+
+| PWD      | Environment | The full path of the working directory                            |
++----------+-------------+------------------------------------------------------------------+
+| OLDPWD   | bash shell  | The full path of the directory before the last cd command         |
++----------+-------------+------------------------------------------------------------------+
+| RANDOM   | bash shell  | A random integer between 0 and 32767                              |
++----------+-------------+------------------------------------------------------------------+
+| SHELL    | Environment | Contains the currently used shell                                 |
++----------+-------------+------------------------------------------------------------------+
+| TERM     | Environment | The terminal emulator used                                        |
++----------+-------------+------------------------------------------------------------------+
+| UID      | Environment | Current user unique ID (integer value)                            |
++----------+-------------+------------------------------------------------------------------+
+| USER     | Environment | Current user name                                                 |
++----------+-------------+------------------------------------------------------------------+
+| _        | bash shell  | Last argument to the previous command executed in the foreground  |
++----------+-------------+------------------------------------------------------------------+
+| ?        | bash shell  | Exit status; see "Exit status"                                    |
++----------+-------------+------------------------------------------------------------------+
+| $        | bash shell  | The ID of the current process (integer value)                     |
++----------+-------------+------------------------------------------------------------------+
+| 0        | bash shell  | The name of the current process                                   |
++----------+-------------+------------------------------------------------------------------+
+
+Exit status
+The shell communicates the completion of a command execution to the caller using what is called the exit status. In general, it is expected that a Linux command returns a status when it terminates. This can either be a normal termination (happy path) or an abnormal termination (something went wrong). A 0 exit status means that the command was successfully run, without any errors, whereas a nonzero value between 1 and 255 signals a failure. To query the exit status, use echo $?.
+
+Be careful with exit status handling in a pipeline, since some shells make only the last status available. You can work around that limitation by using $PIPESTATUS.
+
+Built-in commands
+Shells come with a number of built-in commands. Some useful examples are yes, echo, cat, or read (depending on the Linux distro, some of those commands might not be built-ins but located in /usr/bin). You can use the help command to list built-ins. Do remember, however, that everything else is a shell-external program that you usually can find in /usr/bin (for user commands) or in /usr/sbin (for administrative commands).
+
+How do you know where to find an executable? Here are some ways:
+
+$ which ls
+/usr/bin/ls
+
+$ type ls
+ls is aliased to `ls --color=auto'
+
+NB:One of the technical reviewers of this book rightfully pointed out that which is a non-POSIX, external program that may not always be available. Also, they suggested using command -v rather than which to get the program path and or shell alias/function. See also the shellcheck docs for further details on the matter.
+
+Job control
+==================
+A feature most shells support is called job control. By default, when you enter a command, it takes control of the screen and the keyboard, which we usually call running in the foreground. But what if you don’t want to run something interactively, or, in case of a server, what if there is no input from stdin at all? Enter job control and background jobs: to launch a process in the background, put an & at the end, or to send a foreground process to the background, press Ctrl+Z.
+
+Viewing Long files
+====================
+For long files—that is, files that have more lines than the shell can display on your screen—you can use pagers like less or bat (bat comes with a built-in pager). With paging, a program splits the output into pages where each page fits into what the screen can display and some commands to navigate the pages (view next page, previous page, etc.).
+
+
