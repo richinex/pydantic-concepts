@@ -1,0 +1,543 @@
+ Start new chat
+
+    Projects
+
+Starred
+
+
+# Basic pod status checking
+kubectl get pods -A
+kubectl get pods -o wide
+kubectl get pods -n <namespace>
+kubectl describe pod <pod-name>
+kubectl get events --sort-by='.lastTimestamp'
+kubectl get pods --field-selector=status.phase=Pending
+kubectl get pods --field-selector=status.phase=Failed
+kubectl top pods
+kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName
+kubectl get pods -o jsonpath='{.items[*].status.phase}'
+
+# Pod logs checking
+kubectl logs <pod-name>
+kubectl logs <pod-name> -c <container-name>
+kubectl logs <pod-name> --previous
+kubectl logs <pod-name> --tail=100
+kubectl logs -f <pod-name>
+kubectl logs <pod-name> -p
+kubectl logs -l app=<label>
+kubectl logs <pod-name> > pod-logs.txt
+kubectl logs <pod-name> --since=1h
+kubectl logs <pod-name> --timestamps=true
+
+2. Node and Cluster Health Commands
+
+bash
+
+# Node status and resources
+kubectl get nodes
+kubectl describe node <node-name>
+kubectl top nodes
+kubectl get componentstatuses
+kubectl cluster-info
+kubectl get events -n kube-system
+kubectl describe nodes | grep -i taint
+kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints
+kubectl get nodes --show-labels
+kubectl describe node <node-name> | grep -i capacity -A 5
+kubectl get nodes -o wide
+
+# Cluster level checks
+kubectl api-resources
+kubectl api-versions
+kubectl get namespaces
+kubectl get all --all-namespaces
+kubectl get events --all-namespaces
+
+3. Resource Quota and Limits Commands
+
+bash
+
+# Resource quotas and limits
+kubectl get resourcequota
+kubectl describe resourcequota
+kubectl get limitrange
+kubectl describe limitrange
+kubectl get pods --field-selector=status.phase=Failed -o json
+kubectl get quota --all-namespaces
+kubectl describe quota <quota-name> -n <namespace>
+kubectl get pods -o custom-columns=NAME:.metadata.name,RESOURCES:.spec.containers[*].resources
+kubectl get limitrange -o yaml
+kubectl get pods --field-selector=status.qosClass=BestEffort
+
+4. Service and Networking Commands
+
+bash
+
+# Service connectivity checks
+kubectl get services -A
+kubectl describe service <service-name>
+kubectl get endpoints
+kubectl get ingress
+kubectl describe ingress <ingress-name>
+kubectl get svc -o wide
+kubectl get pods -o wide
+kubectl get endpoints <service-name>
+kubectl edit service <service-name>
+kubectl port-forward service/<service-name> 8080:80
+
+# Network policy checks
+kubectl get networkpolicies
+kubectl describe networkpolicy <policy-name>
+kubectl get pods --show-labels
+kubectl get svc --show-labels
+kubectl get endpoints -o yaml
+kubectl get pods -o custom-columns=NAME:.metadata.name,IP:.status.podIP
+
+5. Storage and Volume Commands
+
+bash
+
+# PV and PVC checks
+kubectl get pv
+kubectl get pvc
+kubectl describe pv <pv-name>
+kubectl describe pvc <pvc-name>
+kubectl get storageclass
+kubectl get pods -o custom-columns=NAME:.metadata.name,VOLUMES:.spec.volumes[*].name
+kubectl get pv --sort-by=.spec.capacity.storage
+kubectl get pvc --sort-by=.spec.resources.requests.storage
+kubectl get sc -o wide
+kubectl describe storageclass <storage-class-name>
+
+6. ConfigMap and Secret Commands
+
+bash
+
+# Config and secret validation
+kubectl get configmaps
+kubectl get secrets
+kubectl describe configmap <configmap-name>
+kubectl get configmap <name> -o yaml
+kubectl get secret <secret-name> -o yaml
+kubectl get pods -o custom-columns=NAME:.metadata.name,ENVS:.spec.containers[*].env
+kubectl get cm --all-namespaces
+kubectl describe secret <secret-name>
+kubectl get secrets --field-selector type=kubernetes.io/tls
+kubectl get configmap <name> -o json
+
+7. Container Image and Registry Commands
+
+bash
+
+# Image and registry troubleshooting
+kubectl get pods -o jsonpath='{.items[*].spec.containers[*].image}'
+kubectl describe pod <pod-name> | grep Image:
+kubectl get pods -o custom-columns=NAME:.metadata.name,IMAGES:.spec.containers[*].image
+kubectl get pods --field-selector=status.phase=ImagePullBackOff
+kubectl get events --field-selector type=Warning
+kubectl get pods -o yaml | grep image:
+kubectl describe pod <pod-name> | grep -A 5 Events:
+kubectl get pods --field-selector=status.phase=ErrImagePull
+kubectl get serviceaccount
+kubectl describe serviceaccount <name>
+
+Each of these commands can be modified with common flags like:
+
+    -n <namespace> for namespace specification
+    -o wide for additional details
+    -o yaml or -o json for full resource specification
+    --all-namespaces or -A for cluster-wide view
+    --watch or -w to watch for changes
+    --selector or -l for label filtering
+
+Remember to replace placeholders like <pod-name>, <namespace>, etc. with actual values in your environment.
+
+1. Inter-Pod Communication Testing Commands
+
+bash
+
+# Create a debugging pod
+kubectl run curl-test --image=curlimages/curl -i --tty --rm -- sh
+kubectl run netshoot --image=nicolaka/netshoot -i --tty --rm -- /bin/bash
+kubectl run busybox --image=busybox -i --tty --rm -- /bin/sh
+kubectl run nginx-test --image=nginx -i --tty --rm -- /bin/bash
+
+# Testing service connectivity from inside a pod
+kubectl exec -it <pod-name> -- curl http://service-name.namespace.svc.cluster.local:port
+kubectl exec -it <pod-name> -- wget -qO- http://service-name:port/health
+kubectl exec -it <pod-name> -- nc -zv service-name port
+kubectl exec -it <pod-name> -- ping service-name.namespace.svc.cluster.local
+
+# DNS troubleshooting
+kubectl exec -it <pod-name> -- nslookup kubernetes.default
+kubectl exec -it <pod-name> -- cat /etc/resolv.conf
+kubectl exec -it <pod-name> -- dig service-name.namespace.svc.cluster.local
+
+2. Advanced Network Debugging
+
+bash
+
+# Network policy testing
+kubectl run netshoot --image=nicolaka/netshoot -i --tty --rm -- /bin/bash -c "tcpdump -i any port 80"
+kubectl exec -it <pod-name> -- iptables -L
+kubectl exec -it <pod-name> -- netstat -tulpn
+kubectl exec -it <pod-name> -- ss -tuln
+
+# Create a test pod in specific namespace
+kubectl run -n <namespace> test-pod --image=busybox --command -- sleep 3600
+kubectl exec -it test-pod -n <namespace> -- wget -qO- http://service-name:port
+
+# Monitor network traffic
+kubectl exec -it <pod-name> -- tcpdump -i any
+kubectl exec -it <pod-name> -- mtr service-name.namespace.svc.cluster.local
+
+3. File Operations and Debugging
+
+bash
+
+# Copy files to/from pods
+kubectl cp /local/path <pod-name>:/container/path
+kubectl cp <pod-name>:/container/path /local/path
+kubectl cp <pod-name>:/container/path /local/path -c <container-name>
+kubectl cp /local/file.txt namespace/pod-name:/tmp/
+
+# Create config files inside pods
+kubectl exec -it <pod-name> -- sh -c 'echo "test data" > /tmp/test.txt'
+kubectl exec -it <pod-name> -- sh -c 'cat > /tmp/config.json << EOF
+{
+  "key": "value"
+}
+EOF'
+
+# View and edit files in pods
+kubectl exec -it <pod-name> -- cat /path/to/file
+kubectl exec -it <pod-name> -- vi /path/to/file
+kubectl exec -it <pod-name> -- tail -f /var/log/app.log
+
+4. Advanced Pod Debugging
+
+bash
+
+# Create debugging sidecar
+kubectl debug <pod-name> -it --image=ubuntu --share-processes --copy-to=debug-pod
+
+# Create pod with host network
+kubectl run network-debug --image=nicolaka/netshoot --overrides='{"spec": {"hostNetwork": true}}' -i --tty --rm -- /bin/bash
+
+# Attach ephemeral container
+kubectl debug -it <pod-name> --image=busybox --target=<container-name>
+
+# Create pod with specific capabilities
+kubectl run privileged-debug --image=ubuntu --overrides='{"spec": {"containers": [{"name": "debug", "image": "ubuntu", "securityContext": {"privileged": true}}]}}' -i --tty --rm -- /bin/bash
+
+5. Microservice-Specific Debugging
+
+bash
+
+# HTTP request testing
+kubectl exec -it <pod-name> -- curl -v -H "Content-Type: application/json" \
+  -d '{"key":"value"}' \
+  http://service-name:port/api/endpoint
+
+# Create load testing pod
+kubectl run siege --image=jess/siege -i --tty --rm -- -c 10 -t 10s http://service-name:port
+
+# Monitor API calls
+kubectl exec -it <pod-name> -- watch 'curl -s http://service-name:port/metrics'
+
+# gRPC testing
+kubectl exec -it <pod-name> -- grpcurl -plaintext service-name:port list
+kubectl exec -it <pod-name> -- grpcurl -d '{"key": "value"}' service-name:port Service.Method
+
+6. Performance and Resource Debugging
+
+bash
+
+# CPU profiling
+kubectl exec -it <pod-name> -- top
+kubectl exec -it <pod-name> -- ps aux
+kubectl exec -it <pod-name> -- pidstat 1
+
+# Memory analysis
+kubectl exec -it <pod-name> -- free -m
+kubectl exec -it <pod-name> -- vmstat 1
+kubectl exec -it <pod-name> -- slabtop
+
+# Disk I/O monitoring
+kubectl exec -it <pod-name> -- iostat
+kubectl exec -it <pod-name> -- iotop
+
+7. Service Mesh (Istio) Debugging
+
+bash
+
+# Istio proxy debugging
+kubectl exec -it <pod-name> -c istio-proxy -- pilot-agent request GET stats
+kubectl exec -it <pod-name> -c istio-proxy -- curl localhost:15000/config_dump
+kubectl exec -it <pod-name> -c istio-proxy -- netstat -an
+
+# Envoy proxy statistics
+kubectl exec -it <pod-name> -c istio-proxy -- curl localhost:15000/stats
+kubectl exec -it <pod-name> -c istio-proxy -- curl localhost:15000/clusters
+kubectl exec -it <pod-name> -c istio-proxy -- curl localhost:15000/listeners
+
+8. Database Connectivity Testing
+
+bash
+
+# MySQL
+kubectl run mysql-client --image=mysql:5.7 -i --tty --rm -- mysql -h mysql-service -u user -p
+
+# PostgreSQL
+kubectl run pg-client --image=postgres -i --tty --rm -- psql -h postgres-service -U user -d dbname
+
+# MongoDB
+kubectl run mongo-client --image=mongo -i --tty --rm -- mongo mongodb-service:27017
+
+# Redis
+kubectl run redis-client --image=redis -i --tty --rm -- redis-cli -h redis-service
+
+9. SSL/TLS Certificate Debugging
+
+bash
+
+# Check certificate information
+kubectl exec -it <pod-name> -- openssl s_client -connect service:443 -showcerts
+kubectl exec -it <pod-name> -- curl -vI https://service-name
+
+# Certificate verification
+kubectl exec -it <pod-name> -- openssl verify -CAfile /path/to/ca.crt /path/to/cert.crt
+kubectl exec -it <pod-name> -- openssl x509 -in /path/to/cert.crt -text -noout
+
+Remember to:
+
+    Replace placeholders (<pod-name>, <namespace>, etc.)
+    Ensure proper RBAC permissions
+    Be cautious with privileged containers
+    Clean up debugging resources after use
+    Consider cluster security policies
+    Use appropriate resource limits for debugging pods
+
+
+******************************************************************************************************************************************
+1. Initial Pod Status Investigation
+
+bash
+
+# Check for PENDING pods
+kubectl get pods --all-namespaces --field-selector status.phase=Pending
+kubectl get pods -o wide | grep Pending
+kubectl describe pods | grep -A 10 "Status.*Pending"
+
+# Check cluster capacity
+kubectl describe nodes | grep -A 5 "Allocated resources"
+kubectl get nodes -o custom-columns=NAME:.metadata.name,ALLOCATABLE:.status.allocatable.cpu,MEMORY:.status.allocatable.memory
+
+# Check if pods are RUNNING
+kubectl get pods --field-selector status.phase=Running
+kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName,IP:.status.podIP
+kubectl describe pods | grep -A 5 "Status.*Running"
+
+# Check if pods are READY
+kubectl get pods -o custom-columns=NAME:.metadata.name,READY:.status.containerStatuses[*].ready
+kubectl get pods --field-selector status.phase!=Running,status.phase!=Succeeded
+
+2. Pod Logs Analysis
+
+bash
+
+# Get current logs
+kubectl logs <pod-name> --all-containers=true
+kubectl logs <pod-name> -c <container-name> --tail=100
+kubectl logs <pod-name> --previous
+kubectl logs <pod-name> --since=1h --timestamps=true
+
+# Container startup logs
+kubectl logs <pod-name> -c <container-name> --since=5m | grep -i error
+kubectl logs <pod-name> -c <container-name> --previous > previous-logs.txt
+kubectl logs --selector app=<app-label> --all-containers=true
+
+# Event monitoring
+kubectl get events --sort-by=.lastTimestamp
+kubectl get events --field-selector type=Warning
+kubectl get events --field-selector involvedObject.kind=Pod
+
+3. Resource Quota and Limits
+
+bash
+
+# Check resource limits
+kubectl describe resourcequota
+kubectl get pods -o custom-columns=NAME:.metadata.name,REQUESTS:.spec.containers[*].resources.requests,LIMITS:.spec.containers[*].resources.limits
+kubectl describe limitrange
+
+# Check node resources
+kubectl describe node | grep -A 5 "Allocated resources"
+kubectl top nodes
+kubectl top pods --containers
+
+# PersistentVolume claims
+kubectl get pvc
+kubectl describe pvc
+kubectl get pv --sort-by=.spec.capacity.storage
+
+4. Image and Container Issues
+
+bash
+
+# Check image pull status
+kubectl get pods -o custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[*].image,IMAGE_PULL_POLICY:.spec.containers[*].imagePullPolicy
+kubectl describe pod <pod-name> | grep -A 5 "Events:"
+kubectl get events --field-selector reason=Failed
+
+# Check image registry access
+kubectl create secret docker-registry regcred \
+  --docker-server=<registry-server> \
+  --docker-username=<username> \
+  --docker-password=<password>
+kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "regcred"}]}'
+
+# Container runtime debugging
+kubectl describe node | grep "Container Runtime Version"
+kubectl get nodes -o custom-columns=NODE:.metadata.name,CONTAINER_RUNTIME:.status.nodeInfo.containerRuntimeVersion
+
+5. Node and Scheduler Issues
+
+bash
+
+# Check node status
+kubectl get nodes -o custom-columns=NAME:.metadata.name,STATUS:.status.conditions[?(@.type=="Ready")].status
+kubectl describe node <node-name> | grep -A 5 "Conditions"
+kubectl get nodes --show-labels
+
+# Scheduler issues
+kubectl get pods --field-selector status.phase=Pending -o json | jq '.items[] | .status.conditions[] | select(.type == "PodScheduled")'
+kubectl describe pod <pod-name> | grep -A 10 "Events:"
+kubectl get events --field-selector involvedObject.kind=Pod,reason=FailedScheduling
+
+6. Network and Service Connectivity
+
+bash
+
+# Service endpoint verification
+kubectl get endpoints
+kubectl get svc
+kubectl describe svc <service-name>
+kubectl get pods -o wide --show-labels
+
+# DNS debugging
+kubectl run tmp-shell --rm -i --tty --image nicolaka/netshoot -- /bin/bash
+kubectl exec -it tmp-shell -- dig kubernetes.default.svc.cluster.local
+kubectl exec -it tmp-shell -- dig <service-name>.<namespace>.svc.cluster.local
+
+# Port forwarding test
+kubectl port-forward svc/<service-name> 8080:80
+kubectl port-forward pod/<pod-name> 8080:80
+
+7. Ingress Troubleshooting
+
+bash
+
+# Check Ingress configuration
+kubectl get ingress --all-namespaces
+kubectl describe ingress <ingress-name>
+kubectl get ingress <ingress-name> -o yaml
+
+# Backend service verification
+kubectl get svc -l <service-selector>
+kubectl describe svc <backend-service>
+kubectl get endpoints <backend-service>
+
+# TLS certificate verification
+kubectl get secret <tls-secret> -o yaml
+kubectl describe secret <tls-secret>
+
+8. Service Mesh and Proxy Issues
+
+bash
+
+# Check service mesh configuration
+kubectl get virtualservice --all-namespaces
+kubectl get destinationrule --all-namespaces
+kubectl describe virtualservice <vs-name>
+
+# Proxy status
+kubectl get pods -l istio=proxy
+kubectl logs -l istio=proxy -c istio-proxy
+kubectl exec -it <pod-name> -c istio-proxy -- pilot-agent request GET stats
+
+9. Volume and Storage Issues
+
+bash
+
+# Check volume mounts
+kubectl describe pod <pod-name> | grep -A 5 Volumes
+kubectl get pv,pvc
+kubectl describe pvc <pvc-name>
+
+# Storage class verification
+kubectl get storageclass
+kubectl describe storageclass <storage-class-name>
+kubectl get pvc --all-namespaces --sort-by=.spec.resources.requests.storage
+
+10. Multi-tool Debugging Pod
+
+bash
+
+# Create a debugging pod with multiple tools
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: netshoot
+spec:
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot
+    command: ['sleep', '3600']
+    securityContext:
+      privileged: true
+EOF
+
+# Common debugging commands from netshoot
+kubectl exec -it netshoot -- curl -v telnet://<service>:<port>
+kubectl exec -it netshoot -- tcpdump -i any port <port>
+kubectl exec -it netshoot -- nslookup <service>.<namespace>.svc.cluster.local
+
+11. Health Probe Verification
+
+bash
+
+# Check liveness probe
+kubectl get pod <pod-name> -o yaml | grep -A 10 livenessProbe
+kubectl describe pod <pod-name> | grep -A 5 "Liveness"
+
+# Check readiness probe
+kubectl get pod <pod-name> -o yaml | grep -A 10 readinessProbe
+kubectl describe pod <pod-name> | grep -A 5 "Readiness"
+
+# Monitor probe failures
+kubectl get events --field-selector reason=Unhealthy
+
+Remember to:
+
+    Replace <placeholders> with actual values
+    Check permissions before running privileged commands
+    Clean up debugging resources after use
+    Follow your organization's security policies
+    Document findings and solutions
+    Consider cluster impact before running resource-intensive commands
+
+This comprehensive guide follows the flowchart's decision tree while providing detailed commands for each troubleshooting step.
+Claude can make mistakes. Please double-check responses.
+
+
+Chat controls
+3.5 Sonnet (New)
+
+Most intelligent model Learn more
+Content
+
+Chat styles
+Font
+

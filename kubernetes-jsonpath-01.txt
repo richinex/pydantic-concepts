@@ -1,0 +1,381 @@
+Sample JSON Structures:
+Sample 1: Node JSON Output
+
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "node1",
+        "labels": {
+          "kubernetes.io/hostname": "node1"
+        }
+      },
+      "status": {
+        "addresses": [
+          {
+            "type": "InternalIP",
+            "address": "192.168.1.1"
+          },
+          {
+            "type": "ExternalIP",
+            "address": "203.0.113.1"
+          }
+        ],
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "node2",
+        "labels": {
+          "kubernetes.io/hostname": "node2"
+        }
+      },
+      "status": {
+        "addresses": [
+          {
+            "type": "InternalIP",
+            "address": "192.168.1.2"
+          },
+          {
+            "type": "ExternalIP",
+            "address": "203.0.113.2"
+          }
+        ],
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True"
+          }
+        ]
+      }
+    }
+  ]
+}
+
+Sample 2: Pod JSON Output
+
+{
+  "items": [
+    {
+      "metadata": {
+        "name": "pod1",
+        "namespace": "default",
+        "labels": {
+          "app": "nginx"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "nginx-container",
+            "image": "nginx:latest",
+            "resources": {
+              "requests": {
+                "memory": "64Mi",
+                "cpu": "250m"
+              },
+              "limits": {
+                "memory": "128Mi",
+                "cpu": "500m"
+              }
+            }
+          }
+        ]
+      },
+      "status": {
+        "containerStatuses": [
+          {
+            "name": "nginx-container",
+            "state": {
+              "running": {
+                "startedAt": "2023-04-12T08:35:44Z"
+              }
+            },
+            "ready": true,
+            "restartCount": 0
+          }
+        ]
+      }
+    }
+  ]
+}
+
+1. Get All Pod Names
+
+kubectl get pods -o jsonpath='{.items[*].metadata.name}'
+
+Explanation:
+
+    kubectl get pods: Retrieves the list of pods.
+    -o jsonpath='{.items[*].metadata.name}': Uses JSONPath to extract the name of each pod in the .items array.
+
+Expected Output:
+
+pod1
+
+2. Get All Container Names in a Pod
+
+kubectl get pod <pod-name> -o jsonpath='{.spec.containers[*].name}'
+
+Explanation:
+
+    kubectl get pod <pod-name>: Retrieves the pod's details.
+    -o jsonpath='{.spec.containers[*].name}': Extracts the names of all containers under the spec.containers array.
+
+Expected Output:
+
+nginx-container
+
+3. Get Node Names
+
+kubectl get nodes -o jsonpath='{.items[*].metadata.name}'
+
+Explanation:
+
+    kubectl get nodes: Retrieves a list of nodes.
+    -o jsonpath='{.items[*].metadata.name}': Extracts the names of all nodes in the .items array.
+
+Expected Output:
+
+node1 node2
+
+4. Get the Internal IP Address of All Nodes
+
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{" IP: "}{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
+
+Explanation:
+
+    kubectl get nodes: Retrieves the list of nodes.
+    {range .items[*]}: Loops through all nodes in the .items array.
+    {.metadata.name}: Extracts the node's name.
+    {" IP: "}: Adds a string IP: for readability.
+    {.status.addresses[?(@.type=="InternalIP")].address}: Filters the addresses array to find the internal IP address where the type is "InternalIP."
+    {"\n"}: Adds a newline after each entry.
+    {end}: Ends the range loop.
+
+Expected Output:
+
+node1 IP: 192.168.1.1
+node2 IP: 192.168.1.2
+
+5. Get the External IP of All Nodes
+
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{" External IP: "}{.status.addresses[?(@.type=="ExternalIP")].address}{"\n"}{end}'
+
+Explanation:
+
+    Same as the previous command, but this time it filters for the ExternalIP type in the addresses array.
+
+Expected Output:
+
+node1 External IP: 203.0.113.1
+node2 External IP: 203.0.113.2
+
+6. Get the Status of All Containers in a Pod
+
+kubectl get pod <pod-name> -o jsonpath='{.status.containerStatuses[*].state}'
+
+Explanation:
+
+    kubectl get pod <pod-name>: Retrieves the details of the pod.
+    -o jsonpath='{.status.containerStatuses[*].state}': Extracts the state of all containers under the .status.containerStatuses array.
+
+Expected Output:
+
+running
+
+7. Get Names of Pods in a Specific Namespace
+
+kubectl get pods -n <namespace> -o jsonpath='{.items[*].metadata.name}'
+
+Explanation:
+
+    kubectl get pods -n <namespace>: Retrieves pods from a specific namespace.
+    -o jsonpath='{.items[*].metadata.name}': Extracts the names of all pods in the specified namespace.
+
+Expected Output:
+
+pod1
+
+8. Get Pod Names with Specific Label
+
+kubectl get pods -l <label-key>=<label-value> -o jsonpath='{.items[*].metadata.name}'
+
+Explanation:
+
+    kubectl get pods -l <label-key>=<label-value>: Filters pods based on a label.
+    -o jsonpath='{.items[*].metadata.name}': Extracts the names of the pods that match the label.
+
+Expected Output:
+
+pod1
+
+9. Get All Pods' IPs
+
+kubectl get pods -o jsonpath='{.items[*].status.podIP}'
+
+Explanation:
+
+    kubectl get pods: Retrieves the list of pods.
+    -o jsonpath='{.items[*].status.podIP}': Extracts the podIP field from each pod.
+
+Expected Output:
+
+10.1.2.3
+
+10. Get Container Status in a Specific Pod
+
+kubectl get pod <pod-name> -o jsonpath='{.status.containerStatuses[?(@.name=="nginx-container")].state}'
+
+Explanation:
+
+    kubectl get pod <pod-name>: Retrieves the details of a specific pod.
+    -o jsonpath='{.status.containerStatuses[?(@.name=="nginx-container")].state}': Filters the containerStatuses array for the container named nginx-container and extracts its state.
+
+Expected Output:
+
+running
+
+11. Get the "Ready" Status of All Nodes
+
+kubectl get nodes -o jsonpath='{.items[?(@.status.conditions[?(@.type=="Ready")].status=="True")].metadata.name}'
+
+Explanation:
+
+    kubectl get nodes: Retrieves the list of nodes.
+    -o jsonpath='{.items[?(@.status.conditions[?(@.type=="Ready")].status=="True")].metadata.name}': Filters the items array to only include nodes that have a Ready condition with a status of True.
+
+Expected Output:
+
+node1 node2
+
+12. Get Pod's Deployment Name (if part of a Deployment)
+
+kubectl get pod <pod-name> -o jsonpath='{.metadata.ownerReferences[?(@.kind=="ReplicaSet")].name}'
+
+Explanation:
+
+    kubectl get pod <pod-name>: Retrieves the pod's details.
+    -o jsonpath='{.metadata.ownerReferences[?(@.kind=="ReplicaSet")].name}': Extracts the name of the ReplicaSet (which typically belongs to a Deployment) that owns the pod.
+
+Expected Output:
+
+pod-replicaset-name
+
+13. Get Labels of All Pods in a Namespace
+
+kubectl get pods -n <namespace> -o jsonpath='{.items[*].metadata.labels}'
+
+Explanation:
+
+    kubectl get pods -n <namespace>: Retrieves the list of pods from a specific namespace.
+    -o jsonpath='{.items[*].metadata.labels}': Extracts the labels of all pods.
+
+Expected Output:
+
+{"app":"nginx"} {"app":"redis"}
+
+14. List All Pods with a Specific Label
+
+kubectl get pods -l <label-key>=<label-value> -o jsonpath='{.items[*].metadata.name}'
+
+Explanation:
+
+    kubectl get pods -l <label-key>=<label-value>: Filters the pods based on a label key-value pair.
+    -o jsonpath='{.items[*].metadata.name}': Extracts the names of the pods that match the label.
+
+Expected Output:
+
+pod1
+
+15. Get the Node Names and Their Conditions
+
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{" Conditions: "}{.status.conditions[*].type}{"\n"}{end}'
+
+Explanation:
+
+    kubectl get nodes: Retrieves the list of nodes.
+    {range .items[*]}: Iterates through each node.
+    {.metadata.name}: Extracts the node name.
+    {" Conditions: "}: Adds a readable separator.
+    {.status.conditions[*].type}: Lists the types of conditions (e.g., Ready, OutOfDisk).
+    {"\n"}: Adds a newline after each entry.
+    {end}: Ends the range loop.
+
+Expected Output:
+
+node1 Conditions: Ready
+node2 Conditions: Ready
+
+16. Get Pods with Specific Condition in Their Status
+
+kubectl get pods -o jsonpath='{.items[?(@.status.conditions[?(@.type=="PodScheduled")].status=="True")].metadata.name}'
+
+Explanation:
+
+    kubectl get pods: Retrieves the list of pods.
+    -o jsonpath='{.items[?(@.status.conditions[?(@.type=="PodScheduled")].status=="True")].metadata.name}': Filters the pods where the PodScheduled condition is True.
+
+Expected Output:
+
+pod1
+
+17. Get Pod Names and Their Restart Count
+
+kubectl get pod <pod-name> -o jsonpath='{.status.containerStatuses[*].name}{" Restart Count: "}{.status.containerStatuses[*].restartCount}'
+
+Explanation:
+
+    kubectl get pod <pod-name>: Retrieves the pod’s details.
+    -o jsonpath='{.status.containerStatuses[*].name}{" Restart Count: "}{.status.containerStatuses[*].restartCount}': Lists the container name and its associated restart count.
+
+Expected Output:
+
+nginx-container Restart Count: 0
+
+18. Get Cluster's Resource Requests & Limits
+
+kubectl get pods -o jsonpath='{.items[*].spec.containers[*].resources}'
+
+Explanation:
+
+    kubectl get pods: Retrieves the list of pods.
+    -o jsonpath='{.items[*].spec.containers[*].resources}': Extracts the resource requests and limits for each container.
+
+Expected Output:
+
+{"requests":{"memory":"64Mi","cpu":"250m"},"limits":{"memory":"128Mi","cpu":"500m"}}
+
+19. Get Specific Container's Restart Count in a Pod
+
+kubectl get pod <pod-name> -o jsonpath='{.status.containerStatuses[?(@.name=="<container-name>")].restartCount}'
+
+Explanation:
+
+    kubectl get pod <pod-name>: Retrieves the pod’s details.
+    -o jsonpath='{.status.containerStatuses[?(@.name=="<container-name>")].restartCount}': Filters and extracts the restartCount for a specific container.
+
+Expected Output:
+
+0
+
+20. Get All Pods Running a Specific Container
+
+kubectl get pods -o jsonpath='{.items[?(@.spec.containers[*].name=="<container-name>")].metadata.name}'
+
+Explanation:
+
+    kubectl get pods: Retrieves the list of pods.
+    -o jsonpath='{.items[?(@.spec.containers[*].name=="<container-name>")].metadata.name}': Filters the pods that are running a container with a specific name.
+
+Expected Output:
+
+pod1
+
+These examples should give you a strong foundation in Kubernetes JSONPath queries! The key takeaway is to practice building commands incrementally and experiment with filters (?()) and ranges (range ... end) to get precise results.

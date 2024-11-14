@@ -1,0 +1,30 @@
+Site Reliability Engineering
+=================================
+Monitoring the state and performance of software systems is one of the key responsibilities associated with the role of a site reliability engineer (SRE). Before we delve deeper into the topic of monitoring and alerting, we should probably take a few minutes and clarify some of the SRE-related terms that we will be using in the following sections.
+
+Service-level indicators (SLIs)
+==============================
+An SLI is a type of metric that allows us to quantify the perceived quality of a service from the perspective of the end user. Let's take a look at some common types of SLIs that can be applied to cloud-based services:
+
+Availability is defined as the ratio of two quantities: the time that the service can be used by the end user/customer and the total time that the service is deployed (including any downtime). For example, if we were operating a service that was offline for maintenance for about 53 minutes over the course of the last year, we could claim that the service had 99.99% availability for the same period.
+Throughput is defined as the number of requests that a service processes in a given time period (for example, requests per second).
+Latency is yet another interesting SLI and is defined as the time it takes for the server to process an incoming request and return a response to the client.
+
+Service-level objectives (SLOs)
+=====================================
+An SLO is defined as the range of values for an SLI that allows us to deliver a particular level of service to an end user or customer.
+
+Depending on the underlying SLI, SLOs can either be specified either as a lower bound (SLI >= target), an upper bound (SLI <= target), or both (lower-bound <= SLI >= upper bound).
+SLO definitions generally consist of three parts: a description of the thing that we are measuring (the SLI), the expected service level expressed as a percentage, and the period where the measurement takes place. Let's take a quick look at some SLO examples:
+
+The system's uptime, when measured in a period of a single month, must be at least 99%
+The response time for 95% of service requests to X, when measured in a period of a year, must not exceed 100 ms
+The CPU utilization for the database, when measured in a period of a day, must be in the range [40%, 70%]
+
+Service-level agreements (SLAs)
+====================================
+An SLA is an implicit or explicit contract between a service provider and one or more service consumers. The SLA outlines a set of SLOs that have to be met and the consequences for both meeting and failing to meet them.
+
+Note that, depending on the type of service being offered, the role of the consumer can be fulfilled either by an external third party or an internal company stakeholder. In the former case, an SLA would typically define a list of financial penalties for failing to meet the agreed SLOs. In the latter case, SLA terms can be less strict but must nevertheless be factored in when authoring SLAs for other downstream services.
+
+
