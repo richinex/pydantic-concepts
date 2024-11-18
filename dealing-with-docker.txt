@@ -1,0 +1,126 @@
+# Remove all distro and distrom images
+docker images | grep 'distro[m-]' | awk '{print $1":"$2}' | xargs docker rmi
+
+# Remove all localhost:33835 images
+docker images | grep 'localhost:33835' | awk '{print $1":"$2}' | xargs docker rmi
+
+Remove dangling images first:
+
+# Remove dangling images
+docker image prune -f
+
+# Then remove specific ones
+docker image rm $(docker images | grep 'distro\|jaeger\|sqlite3\|localhost:33835' | awk '{print $3}')
+
+For a safer approach that checks for container dependencies:
+
+#!/bin/bash
+
+images_to_remove=(
+    "jaegertracing/all-in-one:latest"
+    "distro-worker:latest"
+    "hierarchical-data-app-app:latest"
+    "keinos/sqlite3:latest"
+    "distrom-worker2:latest"
+    "distrom-worker1:latest"
+    "distrom-worker3:latest"
+    "distrom-leader2:latest"
+    "distrom-leader3:latest"
+    "distrom-leader1:latest"
+    "distro-leader1:latest"
+    "distro-leader3:latest"
+    "distro-leader2:latest"
+    "bitnami/etcd:latest"
+    "localhost:33835/controller:tilt-76ae8df59fa4e66c"
+    "localhost:33835/controller:tilt-2080d2326662bd65"
+    "localhost:33835/workflow-frontend:tilt-140caf92a7d14181"
+    "localhost:33835/workflow-frontend:tilt-5d1a1a69b253f1fa"
+)
+
+for image in "${images_to_remove[@]}"; do
+    echo "Removing $image..."
+    docker image rm "$image" || echo "Failed to remove $image"
+done
+
+Before removing, you might want to:
+
+Check for running containers using these images:
+
+docker ps -a --format '{{.Image}}'
+
+Stop any running containers using these images:
+
+docker stop $(docker ps -a -q)
+
+Remove stopped containers:
+
+docker container prune -f
+Would you like me to help you create a script that safely removes these images while checking for dependencies? CopyRetryClaude does not have the ability to run the code it generates yet.Rexplain the commandsEditLet's break down each command:
+
+Basic Image Removal:
+
+docker image rm <image-name>:<tag>
+# or shorter form
+docker rmi <image-name>:<tag>
+
+image rm or rmi - removes one or more images
+requires image name and tag
+
+
+Pattern Matching with grep and awk:
+
+bashCopydocker images | grep 'distro[m-]' | awk '{print $1":"$2}' | xargs docker rmi
+
+Breaking it down:
+
+docker images - lists all images
+grep 'distro[m-]' - filters lines containing 'distro' or 'distrom'
+awk '{print $1":"$2}' - prints first column (image name) and second column (tag) with ":" between them
+xargs docker rmi - passes each result as argument to docker rmi
+
+
+Cleaning System:
+
+# Remove unused images (dangling images)
+docker image prune -f
+# -f means force (no confirmation prompt)
+
+# Remove stopped containers
+docker container prune -f
+
+# Remove all stopped containers, unused networks, dangling images
+docker system prune -f
+
+Checking Container Usage:
+
+# List all containers using images
+docker ps -a --format '{{.Image}}'
+# -a shows all containers (including stopped)
+# --format filters output to show only image names
+
+# Stop all running containers
+docker stop $(docker ps -a -q)
+# -q shows only container IDs
+
+The safer script explained:
+
+#!/bin/bash
+
+# Array of images to remove
+images_to_remove=(
+    "image1:tag1"
+    "image2:tag2"
+)
+
+# Loop through each image
+for image in "${images_to_remove[@]}"; do
+    echo "Removing $image..."
+    # Try to remove image, if fails, output message
+    docker image rm "$image" || echo "Failed to remove $image"
+done
+Common flags:
+
+-f or --force: Force removal without prompting
+-a or --all: Show all (containers/images)
+-q or --quiet: Only show IDs
+--format: Format output using Go templates
